@@ -4,8 +4,10 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
+import altair as alt
 from datetime import time, date, datetime
 
+#import dataset
 def upload_dataset(caption: str) -> pd.DataFrame:
     """Let the user upload a dataset as CSV"""
 
@@ -20,24 +22,34 @@ def upload_dataset(caption: str) -> pd.DataFrame:
 
     return data
 
-st.header('Sparkle Too Data Analysis')
-
 #build dashboard
+st.header('Sparkle Too Data Analysis')
 add_sidebar = st.sidebar.selectbox('Project', ('Boost','Pivot'))
 
 #boost
 if add_sidebar == 'Boost':
     st.subheader('Boost Data Dashboard')
     
+    data=upload_dataset('Upload CSV file')
+    
     st.write('Time Range')
     exp_period = st.slider('Choose a time range of completed experiments:',
-                                  value=(date(2019,1,1), date.today()))
-    
-    data=upload_dataset('Upload CSV file')
+                           date(2019,1,1), date.today(),
+                           value=(date(2020,1,1),date(2021,1,1)),
+                           format='YYYY/MM/DD')
                                   
     #data preprocessing
     
     #features engineering
+    
+    #e.g. data visualization time series
+    chart_data = pd.DataFrame(np.random.randn(20, 3),
+                              columns=['a', 'b', 'c'])
+
+    c = alt.Chart(chart_data).mark_circle().encode(
+    x='a', y='b', size='c', color='c', tooltip=['a', 'b', 'c'])
+
+    st.altair_chart(c, use_container_width=True)
                                   
                                   
 #pivot    
@@ -45,6 +57,13 @@ if add_sidebar == 'Pivot':
     st.subheader('Pivot Data Dashboard')
     
     data=upload_dataset('Upload CSV file')
+        
+    st.write('Time Range')
+    exp_period = st.slider('Choose a time range of completed experiments:',
+                           date(2019,1,1), date.today(),
+                           value=(date(2020,1,1),date(2021,1,1)),
+                           format='YYYY/MM/DD')
+   
     #data preprocessing
     
     #features engineering
