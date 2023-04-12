@@ -27,13 +27,13 @@ add_sidebar = st.sidebar.selectbox('Project', ('Boost','Pivot'))
 
 #boost
 if add_sidebar == 'Boost':
-    st.write('Boost Data Dashboard')
+    st.subheader('Boost Data Dashboard')
     
-    st.subheader('Time Range')
+    st.write('Time Range')
     exp_period = st.slider('Choose a time range of completed experiments:',
                                   value=(date(2019,1,1), date.today()))
     
-    data=upload_dataset('Upload the file')
+    data=upload_dataset('Upload CSV file')
                                   
     #data preprocessing
     
@@ -42,8 +42,9 @@ if add_sidebar == 'Boost':
                                   
 #pivot    
 if add_sidebar == 'Pivot':
-    st.write('Pivot Data Dashboard')
+    st.subheader('Pivot Data Dashboard')
     
+    data=upload_dataset('Upload CSV file')
     #data preprocessing
     
     #features engineering
