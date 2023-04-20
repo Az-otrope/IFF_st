@@ -7,21 +7,6 @@ import plotly.express as px
 import altair as alt
 from datetime import time, date, datetime
 
-#import dataset
-#def upload_dataset(caption: str) -> pd.DataFrame:
-#    """Let the user upload a dataset as CSV"""
-#
-#    file = st.file_uploader(caption, type=["csv"])
-#    if not file:
-#        st.warning("Please upload a CSV file.")
-#        return pd.DataFrame()
-#    data = pd.read_csv(file)
-#    st.write(f"DataFrame size: {len(data)}")
-#    file.close()
-#    st.dataframe(data.head())
-#
-#    return data
-
 def upload_dataset(caption: str) -> pd.DataFrame:
     """
     Let the user upload a dataset as CSV then cleans up the file contents.
@@ -49,7 +34,44 @@ def upload_dataset(caption: str) -> pd.DataFrame:
 
 #build dashboard
 st.header('Sparkle Too Data Analysis')
-add_sidebar = st.sidebar.selectbox('Project', ('Boost','Pivot'))
+add_sidebar = st.sidebar.selectbox('Project', ('Boost','Pivot In-pack', 'Pivot On-seed'))
+
+
+                                  
+                                  
+#pivot In-pack   
+if add_sidebar == 'Pivot In-pack':
+    st.subheader('Pivot In-pack Data Dashboard')
+    
+    data=upload_dataset('Upload CSV file')
+        
+    st.write('Time Range')
+    exp_period = st.slider('Choose a time range of completed experiments:',
+                           date(2019,1,1), date.today(),
+                           value=(date(2020,1,1),date(2021,1,1)),
+                           format='YYYY/MM/DD')
+   
+    #data preprocessing
+    
+    #features engineering
+
+#pivot On-seed
+if add_sidebar == 'Pivot On-seed':
+    st.subheader('Pivot On-seed Data Dashboard')
+    
+    data=upload_dataset('Upload CSV file')
+        
+    st.write('Time Range')
+    exp_period = st.slider('Choose a time range of completed experiments:',
+                           date(2019,1,1), date.today(),
+                           value=(date(2020,1,1),date(2021,1,1)),
+                           format='YYYY/MM/DD')
+   
+    #data preprocessing
+    
+    #features engineering
+                                               
+                                               
 
 #boost
 if add_sidebar == 'Boost':
@@ -75,21 +97,3 @@ if add_sidebar == 'Boost':
     x='a', y='b', size='c', color='c', tooltip=['a', 'b', 'c'])
 
     st.altair_chart(c, use_container_width=True)
-                                  
-                                  
-#pivot    
-if add_sidebar == 'Pivot':
-    st.subheader('Pivot Data Dashboard')
-    
-    data=upload_dataset('Upload CSV file')
-        
-    st.write('Time Range')
-    exp_period = st.slider('Choose a time range of completed experiments:',
-                           date(2019,1,1), date.today(),
-                           value=(date(2020,1,1),date(2021,1,1)),
-                           format='YYYY/MM/DD')
-   
-    #data preprocessing
-    
-    #features engineering
-
