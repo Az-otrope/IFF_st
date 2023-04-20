@@ -8,14 +8,39 @@ import altair as alt
 from datetime import time, date, datetime
 
 #import dataset
+#def upload_dataset(caption: str) -> pd.DataFrame:
+#    """Let the user upload a dataset as CSV"""
+#
+#    file = st.file_uploader(caption, type=["csv"])
+#    if not file:
+#        st.warning("Please upload a CSV file.")
+#        return pd.DataFrame()
+#    data = pd.read_csv(file)
+#    st.write(f"DataFrame size: {len(data)}")
+#    file.close()
+#    st.dataframe(data.head())
+#
+#    return data
+
 def upload_dataset(caption: str) -> pd.DataFrame:
-    """Let the user upload a dataset as CSV"""
+    """
+    Let the user upload a dataset as CSV then cleans up the file contents.
+    
+    INPUT: a .csv file set in a template
+    
+    OUTPUT: a clean dataframe with relevant info
+    """
 
     file = st.file_uploader(caption, type=["csv"])
     if not file:
         st.warning("Please upload a CSV file.")
         return pd.DataFrame()
-    data = pd.read_csv(file)
+    
+    # read in the template and select relevant information
+    data = pd.read_csv(file, skiprows=2)
+    data = data[['Batch','Date','CFU/mL','CFU/g']]
+    data.dropna(subset=['Batch'],inplace=True)
+
     st.write(f"DataFrame size: {len(data)}")
     file.close()
     st.dataframe(data.head())
