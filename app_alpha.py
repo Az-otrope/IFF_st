@@ -7,28 +7,25 @@ import plotly.express as px
 import altair as alt
 from datetime import time, date, datetime
 
+import warnings
+warnings.filterwarnings("ignore")
+
 def upload_dataset(caption: str) -> pd.DataFrame:
     """
     Let the user upload a dataset as CSV then cleans up the file contents.
     
     INPUT: a .csv file set in a template
-    
-    OUTPUT: a clean dataframe with relevant info
+    OUTPUT: return dataframe with relevant info
     """
-
+    
     file = st.file_uploader(caption, type=["csv"])
     if not file:
         st.warning("Please upload a CSV file.")
         return pd.DataFrame()
-    
-    # read in the template and select relevant information
-    data = pd.read_csv(file, skiprows=2)
-    data = data[['Batch','Date','CFU/mL','CFU/g']]
-    data.dropna(subset=['Batch'],inplace=True)
-
-    st.write(f"DataFrame size: {len(data)}")
+        
+    data = pd.read_csv(file)
     file.close()
-    st.dataframe(data.head())
+    st.write("File uploaded successfully")
 
     return data
 
@@ -39,12 +36,35 @@ add_sidebar = st.sidebar.selectbox('Project', ('Boost','Pivot In-pack', 'Pivot O
 
                                   
                                   
-#pivot In-pack   
+# Pivot In-pack   
 if add_sidebar == 'Pivot In-pack':
     st.subheader('Pivot In-pack Data Dashboard')
     
-    data=upload_dataset('Upload CSV file')
-        
+    # Refresh the Samples master list
+    st.write('Update Sample Master List (if applicable)')
+    master_lst=upload_dataset('Upload Master list .csv file')
+    
+    
+    # Upload raw CFU data
+    st.write('Experimental CFU data')
+    
+    # ??? without try-except: the website will display an error message for index out of bounds line 61
+    try:
+        rawcfu_df=upload_dataset('Upload Raw CFU .csv file')
+        # replace the colmns with the values of the second row
+        rawcfu_df.columns = rawcfu_df.iloc[1]
+        # remove the first and second rows
+        rawcfu_df = rawcfu_df.iloc[2:]
+        rawcfu_df = rawcfu_df.reset_index()
+        # keep relevant cols
+        rawcfu_df = rawcfu_df[['Batch','Date','CFU/mL','CFU/g']]
+        rawcfu_df.dropna(subset=['Batch'],inplace=True)
+        # display the df
+        st.dataframe(rawcfu_df.head())
+    except:
+        st.write(' ')
+    
+
     st.write('Time Range')
     exp_period = st.slider('Choose a time range of completed experiments:',
                            date(2019,1,1), date.today(),
@@ -59,7 +79,7 @@ if add_sidebar == 'Pivot In-pack':
 if add_sidebar == 'Pivot On-seed':
     st.subheader('Pivot On-seed Data Dashboard')
     
-    data=upload_dataset('Upload CSV file')
+    data=upload_dataset('Upload Raw CFU .csv file')
         
     st.write('Time Range')
     exp_period = st.slider('Choose a time range of completed experiments:',
@@ -77,7 +97,7 @@ if add_sidebar == 'Pivot On-seed':
 if add_sidebar == 'Boost':
     st.subheader('Boost Data Dashboard')
     
-    data=upload_dataset('Upload CSV file')
+    data=upload_dataset('Upload Raw CFU .csv file')
     
     st.write('Time Range')
     exp_period = st.slider('Choose a time range of completed experiments:',
