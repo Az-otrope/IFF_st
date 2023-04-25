@@ -84,7 +84,7 @@ if add_sidebar == 'Pivot In-pack':
                 pass
         
         # handle invalid values and change to float
-        to_float = [['CFU/mL','CFU/g','CV','Water Activity']]
+        to_float = rawcfu_df[['CFU/mL','CFU/g','CV','Water Activity']]
         for col in to_float.columns:
             rawcfu_df[col] = rawcfu_df[col].replace('#DIV/0!', np.NaN)
             rawcfu_df[col] = rawcfu_df[col].astype(float)      
