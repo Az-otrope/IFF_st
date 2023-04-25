@@ -12,10 +12,11 @@ warnings.filterwarnings("ignore")
 
 def upload_dataset(caption: str) -> pd.DataFrame:
     """
-    Let the user upload a dataset as CSV then cleans up the file contents.
+    Let the user upload a dataset as CSV
     
-    INPUT: a .csv file set in a template
-    OUTPUT: return dataframe with relevant info
+    INPUT: a .csv file 
+    
+    OUTPUT: return dataframe with relevant input and calculated information
     """
     
     file = st.file_uploader(caption, type=["csv"])
@@ -29,49 +30,77 @@ def upload_dataset(caption: str) -> pd.DataFrame:
 
     return data
 
-#build dashboard
+
+# build dashboard
 st.header('Sparkle Too Data Analysis')
 add_sidebar = st.sidebar.selectbox('Project', ('Boost','Pivot In-pack', 'Pivot On-seed'))
 
-
                                   
                                   
-# Pivot In-pack   
+# PROJECT: Pivot In-pack   
 if add_sidebar == 'Pivot In-pack':
     st.subheader('Pivot In-pack Data Dashboard')
     
     # Refresh the Samples master list
-    st.write('Update Sample Master List (if applicable)')
-    master_lst=upload_dataset('Upload Master list .csv file')
+    #st.write('New Sample Information (if applicable)')
+    #master_lst=upload_dataset('Upload Master list .csv file')
     
     
     # Upload raw CFU data
     st.write('Experimental CFU data')
+    rawcfu_df=upload_dataset('Upload Raw CFU .csv file')
     
-    # ??? without try-except: the website will display an error message for index out of bounds line 61
-    try:
-        rawcfu_df=upload_dataset('Upload Raw CFU .csv file')
-        # replace the colmns with the values of the second row
+    # data preprocessing
+    if len(rawcfu_df) >0:
+        # replace the columns with the values of the second row
         rawcfu_df.columns = rawcfu_df.iloc[1]
         # remove the first and second rows
         rawcfu_df = rawcfu_df.iloc[2:]
+        # reset index
         rawcfu_df = rawcfu_df.reset_index()
         # keep relevant cols
-        rawcfu_df = rawcfu_df[['Batch','Date','CFU/mL','CFU/g']]
+        rawcfu_df = rawcfu_df[['Batch','T0','Date','CFU/mL','CFU/g','CV','Water Activity']]
+        # remove rows with NaN in 'Batch" col
         rawcfu_df.dropna(subset=['Batch'],inplace=True)
+        
+        
+        # convert to datetime for T0 and Date
+        rawcfu_df[['T0','Date']] = rawcfu_df[['T0','Date']].apply(pd.to_datetime, format="%m/%d/%y")
+        
+        # calculate the time point of plating
+        ## by days
+        rawcfu_df['Time point (day)'] = (rawcfu_df['Date']-rawcfu_df['T0']).apply(lambda x: x.days)
+        ## by weeks
+        to_week = rawcfu_df[['T0','Date']]
+        for i in to_week.columns:
+            to_week[i] = to_week[i].apply(lambda x:x.week)
+        rawcfu_df['Time point (week)'] = to_week['Date'] - to_week['T0']    
+        
+        # remove percentage sign for CV values while ignoring invalid values
+        for idx, row in rawcfu_df.iterrows():
+            try:
+                rawcfu_df.loc[idx, "CV"] = float(row['CV'].split("%")[0])
+            except Exception as e:
+                pass
+        
+        # handle invalid values and change to float
+        to_float = [['CFU/mL','CFU/g','CV','Water Activity']]
+        for col in to_float.columns:
+            rawcfu_df[col] = rawcfu_df[col].replace('#DIV/0!', np.NaN)
+            rawcfu_df[col] = rawcfu_df[col].astype(float)      
+            
+        # change col names
+        rawcfu_df.rename(columns={'Batch':'FD Run ID', 'CV':'CV (%)'}, inplace=True)
         # display the df
         st.dataframe(rawcfu_df.head())
-    except:
-        st.write(' ')
     
-
     st.write('Time Range')
     exp_period = st.slider('Choose a time range of completed experiments:',
                            date(2019,1,1), date.today(),
                            value=(date(2020,1,1),date(2021,1,1)),
                            format='YYYY/MM/DD')
    
-    #data preprocessing
+    
     
     #features engineering
 
