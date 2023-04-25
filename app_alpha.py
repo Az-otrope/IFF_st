@@ -92,7 +92,7 @@ if add_sidebar == 'Pivot In-pack':
         # change col names
         rawcfu_df.rename(columns={'Batch':'FD Run ID', 'CV':'CV (%)'}, inplace=True)
         # display the df
-        st.dataframe(rawcfu_df.head())
+        st.dataframe(rawcfu_df)
     
     st.write('Time Range')
     exp_period = st.slider('Choose a time range of completed experiments:',
