@@ -10,6 +10,7 @@ from datetime import time, date, datetime
 import warnings
 warnings.filterwarnings("ignore")
 
+# FUNCTIONS
 def upload_dataset(caption: str) -> pd.DataFrame:
     """
     Let the user upload a dataset as CSV
@@ -31,7 +32,7 @@ def upload_dataset(caption: str) -> pd.DataFrame:
     return data
 
 
-# build dashboard
+# DASHBOARD
 st.header('Sparkle Too Data Analysis')
 add_sidebar = st.sidebar.selectbox('Project', ('Boost','Pivot In-pack', 'Pivot On-seed'))
 
