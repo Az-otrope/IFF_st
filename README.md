@@ -1,3 +1,3 @@
 # IFF_st
 
-Web app link: https://az-otrope-iff-st-app-alpha-vq9k2h.streamlit.app/
+Web app link (IP): https://az-otrope-iff-st-app-alpha-v0-6am8r9.streamlit.app/
