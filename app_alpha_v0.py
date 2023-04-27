@@ -60,7 +60,8 @@ if add_sidebar == 'Pivot In-pack':
         # reset index
         rawcfu_df = rawcfu_df.reset_index()
         # keep relevant cols
-        rawcfu_df = rawcfu_df[['Batch','T0','Date','CFU/mL','CFU/g','CV','Water Activity']]
+        rawcfu_df = rawcfu_df[['Batch','Sample Description','Storage form','Temperature (C)',
+                               'T0','Date','CFU/mL','CFU/g','CV','Water Activity']]
         # remove rows with NaN in 'Batch" col
         rawcfu_df.dropna(subset=['Batch'],inplace=True)
         
@@ -91,7 +92,7 @@ if add_sidebar == 'Pivot In-pack':
             rawcfu_df[col] = rawcfu_df[col].astype(float)      
             
         # change col names
-        rawcfu_df.rename(columns={'Batch':'FD Run ID', 'CV':'CV (%)'}, inplace=True)
+        rawcfu_df.rename(columns={'Batch':'FD Run ID', 'Temperature-Celsius':'Temperature (C)', 'CV':'CV (%)'}, inplace=True)
         # display the df
         st.dataframe(rawcfu_df)
     
