@@ -7,41 +7,27 @@ import plotly.express as px
 import altair as alt
 from datetime import time, date, datetime
 from pivot_in_pack import pivot_in_pack
+from utils import upload_dataset
 
 import warnings
 warnings.filterwarnings("ignore")
-
-# FUNCTIONS
-def upload_dataset(caption: str) -> pd.DataFrame:
-    """
-    Let the user upload a dataset as CSV
-    
-    INPUT: a .csv file 
-    
-    OUTPUT: return dataframe with relevant input and calculated information
-    """
-    
-    file = st.file_uploader(caption, type=["csv"])
-    if not file:
-        st.warning("Please upload a CSV file.")
-        return pd.DataFrame()
-        
-    data = pd.read_csv(file)
-    file.close()
-
-    return data
 
 
 # DASHBOARD
 st.header('Sparkle Too Data Analysis')
 add_sidebar = st.sidebar.selectbox('Project', ('Boost','Pivot In-pack', 'Pivot On-seed'))
-
                                   
                                   
 # PROJECT: Pivot In-pack   
 if add_sidebar == 'Pivot In-pack':
     pivot_in_pack()
     
+    
+    st.write('Time Range')
+    exp_period = st.slider('Choose a time range of completed experiments:',
+                           date(2019,1,1), date.today(),
+                           value=(date(2020,1,1),date(2021,1,1)),
+                           format='YYYY/MM/DD')
 #pivot On-seed
 if add_sidebar == 'Pivot On-seed':
     st.subheader('Pivot On-seed Data Dashboard')
