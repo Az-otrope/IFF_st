@@ -95,6 +95,7 @@ if add_sidebar == 'Pivot In-pack':
         # Change col names
         rawcfu_df.rename(columns={'Batch':'FD Run ID', 'Temperature-Celsius':'Temperature (C)'}, inplace=True)
         # display the df
+        st.write('CFU Plating Data')
         st.dataframe(rawcfu_df)
     
     st.write('Time Range')
