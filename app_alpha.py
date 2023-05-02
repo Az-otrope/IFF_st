@@ -53,14 +53,15 @@ if add_sidebar == 'Pivot In-pack':
     
     # data preprocessing
     if len(rawcfu_df) >0:
-        # replace the columns with the values of the second row
+        # replace the colmns with the values of the second row
         rawcfu_df.columns = rawcfu_df.iloc[1]
         # remove the first and second rows
         rawcfu_df = rawcfu_df.iloc[2:]
         # reset index
         rawcfu_df = rawcfu_df.reset_index()
         # keep relevant cols
-        rawcfu_df = rawcfu_df[['Batch','T0','Date','CFU/mL','CFU/g','CV','Water Activity']]
+        rawcfu_df = rawcfu_df[['Batch','Sample Description','Storage form','Temperature-Celsius',
+                               'T0','Date','CFU/mL','CFU/g','Water Activity']]
         # remove rows with NaN in 'Batch" col
         rawcfu_df.dropna(subset=['Batch'],inplace=True)
         
@@ -85,13 +86,14 @@ if add_sidebar == 'Pivot In-pack':
                 pass
         
         # handle invalid values and change to float
-        to_float = rawcfu_df[['CFU/mL','CFU/g','CV','Water Activity']]
+        to_float = rawcfu_df[['CFU/mL','CFU/g','Water Activity']]
         for col in to_float.columns:
             rawcfu_df[col] = rawcfu_df[col].replace('#DIV/0!', np.NaN)
-            rawcfu_df[col] = rawcfu_df[col].astype(float)      
+            rawcfu_df[col] = rawcfu_df[col].astype(float)
             
-        # change col names
-        rawcfu_df.rename(columns={'Batch':'FD Run ID', 'CV':'CV (%)'}, inplace=True)
+            
+        # Change col names
+        rawcfu_df.rename(columns={'Batch':'FD Run ID', 'Temperature-Celsius':'Temperature (C)'}, inplace=True)
         # display the df
         st.dataframe(rawcfu_df)
     
