@@ -27,7 +27,7 @@ def upload_dataset(caption: str) -> pd.DataFrame:
         
     data = pd.read_csv(file)
     file.close()
-    st.write("File uploaded successfully")
+    #st.write("File uploaded successfully")
 
     return data
 
@@ -61,7 +61,7 @@ if add_sidebar == 'Pivot In-pack':
         rawcfu_df = rawcfu_df.reset_index()
         # keep relevant cols
         rawcfu_df = rawcfu_df[['Batch','Sample Description','Storage form','Temperature-Celsius',
-                               'T0','Date','CFU/mL','CFU/g','Water Activity']]
+                               'T0','Date','CFU/mL','CFU/g','CV','Water Activity']]
         # remove rows with NaN in 'Batch" col
         rawcfu_df.dropna(subset=['Batch'],inplace=True)
         
@@ -90,13 +90,32 @@ if add_sidebar == 'Pivot In-pack':
         for col in to_float.columns:
             rawcfu_df[col] = rawcfu_df[col].replace('#DIV/0!', np.NaN)
             rawcfu_df[col] = rawcfu_df[col].astype(float)
-            
-            
+  
         # Change col names
-        rawcfu_df.rename(columns={'Batch':'FD Run ID', 'Temperature-Celsius':'Temperature (C)'}, inplace=True)
+        rawcfu_df.rename(columns={'Batch':'FD Run ID', 'Temperature-Celsius':'Temperature (C)', 'CV':'CV (%)'}, inplace=True)
+        
+        # Record the CFUs by week for each ID
+        pivot_rawcfu = rawcfu_df.pivot(index='FD Run ID', columns='Time point (week)', values=['CFU/mL','CFU/g'])
+        # rename the column by the counting week
+        pivot_rawcfu.columns = [f"W{week}_{scale}" for scale, week in pivot_rawcfu.columns.to_list()]
+        
+        # remove cols that cause repeated samples
+        cfu = rawcfu_df.drop(['T0','Date','CFU/mL','CFU/g','CV (%)','Time point (day)','Time point (week)'],axis=1)
+        # drop duplicated IDs
+        cfu.drop_duplicates(subset='FD Run ID', inplace=True)
+        
+        # join the pivot df with the original info
+        cleaned_cfu = pd.merge(cfu, pivot_rawcfu, on='FD Run ID')
+        
+        
         # display the df
         st.write('CFU Plating Data')
-        st.dataframe(rawcfu_df)
+        st.dataframe(rawcfu_df.head())
+        st.write(f"DataFrame size: {len(rawcfu_df)}")
+        
+        st.write('Processed CFU Plating Data')
+        st.dataframe(cleaned_cfu)
+        st.write(f"DataFrame size: {len(cleaned_cfu)}")
     
     st.write('Time Range')
     exp_period = st.slider('Choose a time range of completed experiments:',
