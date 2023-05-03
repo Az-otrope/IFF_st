@@ -14,8 +14,6 @@ from utils import upload_dataset
 
 
 def pivot_in_pack():
-    st.subheader('Pivot In-pack Data Dashboard')
-    
     
     # Upload raw CFU data
     st.write('Experimental CFU data')
@@ -72,10 +70,7 @@ def pivot_in_pack():
         
         # join the pivot df with the original info
         cleaned_cfu = pd.merge(cfu, pivot_rawcfu, on='FD Run ID')
-        
-        
-        return rawcfu_df, cleaned_cfu
-        
+
         # display the df
         st.write('CFU Plating Data')
         st.dataframe(rawcfu_df.head())
@@ -84,6 +79,8 @@ def pivot_in_pack():
         st.write('Processed CFU Plating Data')
         st.dataframe(cleaned_cfu)
         st.write(f"DataFrame size: {len(cleaned_cfu)}")
+        
+        return rawcfu_df, cleaned_cfu
     
     
    

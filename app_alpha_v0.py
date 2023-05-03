@@ -20,8 +20,8 @@ add_sidebar = st.sidebar.selectbox('Project', ('Boost','Pivot In-pack', 'Pivot O
                                   
 # PROJECT: Pivot In-pack   
 if add_sidebar == 'Pivot In-pack':
+    st.subheader('Pivot In-pack Data Dashboard')
     pivot_in_pack()
-    
     
     st.write('Time Range')
     exp_period = st.slider('Choose a time range of completed experiments:',
