@@ -7,7 +7,7 @@ import plotly.express as px
 import altair as alt
 from datetime import time, date, datetime
 from pivot_in_pack import pivot_in_pack
-from utils import upload_dataset, get_report
+from utils import upload_dataset
 
 import warnings
 warnings.filterwarnings("ignore")
