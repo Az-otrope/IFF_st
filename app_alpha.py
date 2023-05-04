@@ -120,7 +120,7 @@ if add_sidebar == 'Pivot In-pack':
         # export data
         st.download_button(
             label="Download report",
-            data=clean.to_csv(),
+            data=cleaned_cfu.to_csv(),
             file_name='Clean CFU.csv',
             mime='text/csv')
     
