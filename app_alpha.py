@@ -116,6 +116,13 @@ if add_sidebar == 'Pivot In-pack':
         st.write('Processed CFU Plating Data')
         st.dataframe(cleaned_cfu)
         st.write(f"DataFrame size: {len(cleaned_cfu)}")
+        
+        # export data
+        st.download_button(
+            label="Download report",
+            data=clean.to_csv(),
+            file_name='Clean CFU.csv',
+            mime='text/csv')
     
     st.write('Time Range')
     exp_period = st.slider('Choose a time range of completed experiments:',

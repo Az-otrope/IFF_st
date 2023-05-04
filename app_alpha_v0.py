@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 import altair as alt
 from datetime import time, date, datetime
+
 from pivot_in_pack import pivot_in_pack
 from utils import upload_dataset
 
@@ -84,9 +85,9 @@ if add_sidebar == 'Pivot In-pack':
     
         # export data
         st.download_button(
-            label="Download report as CSV",
+            label="Download report",
             data=clean.to_csv(),
-            file_name='large_df.csv',
+            file_name='Clean CFU.csv',
             mime='text/csv')
     
         
