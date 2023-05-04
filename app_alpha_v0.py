@@ -7,7 +7,7 @@ import plotly.express as px
 import altair as alt
 from datetime import time, date, datetime
 from pivot_in_pack import pivot_in_pack
-from utils import upload_dataset
+from utils import upload_dataset, get_report
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -62,14 +62,13 @@ if add_sidebar == 'Pivot In-pack':
         seed = st.checkbox('Seed treatment')
         note = st.text_input('Note')
         
-    
         submitted = st.form_submit_button('Submit')
        
     
     st.subheader('CFU Plating Data')
     
     # upload data
-    data=upload_dataset('Upload .csv file')
+    data=upload_dataset()
     
     if len(data) > 0:
         raw, clean = pivot_in_pack(data)
@@ -83,15 +82,21 @@ if add_sidebar == 'Pivot In-pack':
         st.dataframe(clean)
         st.write(f"DataFrame size: {len(clean)}")
     
-
-
+        # export data
+        st.download_button(
+            label="Download report as CSV",
+            data=clean.to_csv(),
+            file_name='large_df.csv',
+            mime='text/csv')
+    
+        
 
 
 #pivot On-seed
 if add_sidebar == 'Pivot On-seed':
     st.title('Pivot On-seed Data Dashboard')
     
-    data=upload_dataset('Upload Raw CFU .csv file')
+    data=upload_dataset()
         
     st.write('Time Range')
     exp_period = st.slider('Choose a time range of completed experiments:',
@@ -109,7 +114,7 @@ if add_sidebar == 'Pivot On-seed':
 if add_sidebar == 'Boost':
     st.title('Boost Data Dashboard')
     
-    data=upload_dataset('Upload Raw CFU .csv file')
+    data=upload_dataset()
     
     st.write('Time Range')
     exp_period = st.slider('Choose a time range of completed experiments:',
