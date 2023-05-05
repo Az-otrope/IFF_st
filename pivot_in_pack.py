@@ -5,8 +5,6 @@ Created on Mon May  1 00:26:40 2023
 
 @author: miu
 """
-from datetime import date
-
 import streamlit as st
 import pandas as pd
 import numpy as np
