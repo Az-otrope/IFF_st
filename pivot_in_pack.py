@@ -115,8 +115,7 @@ def pivot_in_pack(df):
     df = data_cleaning(df)
     df = feature_eng(df)
 
-    pivot_rawcfu = df.pivot(index='FD Run ID', columns='Time point (week)', 
-                            values=['CFU/mL', 'CFU/g', 'Extender CFU/mL', 'Extender CFU/mL SD', 'Water Activity'])
+    pivot_rawcfu = df.pivot(index='FD Run ID', columns='Time point (week)', values=['CFU/mL', 'CFU/g', 'Water Activity'])
     pivot_rawcfu.columns = [f"W{week}_{scale}" for scale, week in pivot_rawcfu.columns.to_list()]
     
     # remove cols that cause duplicated samples
