@@ -76,7 +76,12 @@ def pivot_in_pack_app():
 def feature_eng(df):
     df[['T0', 'Date']] = df[['T0', 'Date']].apply(pd.to_datetime, format="%m/%d/%y")
     df['Time point (day)'] = (df['Date'] - df['T0']).apply(lambda x: x.days)
-    df['Time point (week)'] = df['T0'].apply(lambda x: x.week) - df['Date'].apply(lambda x: x.week)
+    
+    def num_weeks(row):
+        year1, week1, day1 = row['T0'].isocalendar()
+        year2, week2, day2 = row['Date'].isocalendar()
+        return (year2 - year1) * 52 + (week2 - week1)
+    df['Time point (week)'] = df.apply(num_weeks, axis=1)
 
     return df
 
@@ -85,10 +90,10 @@ def data_cleaning(df):
     df.columns = df.iloc[1]
     df = df.iloc[2:].reset_index()
     df.dropna(subset=['Batch'], inplace=True)
+    df.drop(df[df['Remark/AW'] == 'Redo'].index, inplace=True)
     df = df[
-        [
-            'Batch', 'Sample Description', 'Storage form', 'Temperature-Celsius', 'T0', 'Date',
-            'CFU/mL', 'CFU/g', 'CV', 'Water Activity'
+        ['Batch','Sample Description','Storage form','Temperature-Celsius',
+         'T0','Date','CFU/mL','CFU/g','Extender CFU/mL', 'Extender CFU/mL SD','CV','Water Activity'
         ]
     ]
     for idx, row in df.iterrows():
@@ -97,7 +102,7 @@ def data_cleaning(df):
         except Exception as e:
             pass
 
-    for col in ['CFU/mL', 'CFU/g', 'CV', 'Water Activity']:
+    for col in ['CFU/mL', 'CFU/g', 'Extender CFU/mL', 'Extender CFU/mL SD', 'CV', 'Water Activity']:
         df[col] = df[col].replace('#DIV/0!', np.NaN)
         df[col] = df[col].astype(float)
 
@@ -110,11 +115,13 @@ def pivot_in_pack(df):
     df = data_cleaning(df)
     df = feature_eng(df)
 
-    pivot_rawcfu = df.pivot(index='FD Run ID', columns='Time point (week)', values=['CFU/mL', 'CFU/g'])
+    pivot_rawcfu = df.pivot(index='FD Run ID', columns='Time point (week)', 
+                            values=['CFU/mL', 'CFU/g', 'Extender CFU/mL', 'Extender CFU/mL SD', 'Water Activity'])
     pivot_rawcfu.columns = [f"W{week}_{scale}" for scale, week in pivot_rawcfu.columns.to_list()]
     
     # remove cols that cause duplicated samples
-    cfu = df.drop(['CFU/mL', 'CFU/g', 'CV (%)', 'Time point (day)', 'Time point (week)'], axis=1)
+    cfu = df.drop(['CFU/mL', 'CFU/g','CV (%)', 'Extender CFU/mL', 'Extender CFU/mL SD',
+                   'Water Activity','Time point (day)', 'Time point (week)'], axis=1)
     cfu = cfu.drop_duplicates(subset='FD Run ID').reset_index(drop=True)
     
     # join the pivot df with the original info
