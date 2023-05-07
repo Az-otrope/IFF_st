@@ -1,6 +1,6 @@
 ﻿"Sparkle PIVOT Sample CFU plating data recording sheet. Manually enter your data in columns marked with a ⭐ (optional: †) and the other columns should auto-calculate appropriately. The data are sortable, and can be filtered using the dropdowns in each column.",,,,,,,,,,,,,,,,,,,,,,,,
 ⭐,⭐,†,†,†,⭐,†,⭐,,⭐,,⭐,⭐,⭐,⭐,†,,,,,,,,,⭐
-Batch,Sample Description,Storage form,Temperature-Celsius,Logs,No. Reps,Extra,grams,mL,Who,T0,Date,Best DF,R1,R2,R3,CFU/mL,SD CFU/mL,Extender CFU/mL,Extencer CFU/mL SD,CFU/g,SD CFU/g,CV,Water Activity,Remark/AW
+Batch,Sample Description,Storage form,Temperature-Celsius,Logs,No. Reps,Extra,grams,mL,Who,T0,Date,Best DF,R1,R2,R3,CFU/mL,SD CFU/mL,Extender CFU/mL,Extender CFU/mL SD,CFU/g,SD CFU/g,CV,Water Activity,Remark/AW
 IFF09152022-2 T1,,,21,"5, 6",3,,0.3,5.7,EC,1/5/23,2/27/23,1.00E+05,181,203,172,7.41E+08,6.38E+07,,,1.41E+10,1.21E+09,8.60%,0.254,"SP-SDS, Water Activity= 0.254"
 IFF09152022-2 T2,,,21,"5, 6",3,,0.3,5.7,EC,1/5/23,2/27/23,1.00E+06,55,47,46,1.97E+09,1.97E+08,,,3.75E+10,3.75E+09,10.00%,0.198,"SP-SDS, Water Activity= 0.198"
 IFF09152022-2 T3,,,4,"6, 7",3,,0.3,5.7,EC,1/5/23,2/27/23,1.00E+07,35,24,35,1.25E+10,2.54E+09,,,2.38E+11,4.83E+10,20.30%,,Redo
