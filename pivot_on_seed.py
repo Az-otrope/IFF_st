@@ -1,7 +1,34 @@
 import streamlit as st
-from datetime import date
+import streamlit as st
+import pandas as pd
+import numpy as np
 
 from utils import upload_dataset
+
+
+def cast_df_columns(df):
+    """
+    The cast_df_columns function takes a dataframe as input and returns the same dataframe with
+    the columns that are categorical variables cast to pandas.Categorical dtype. The function also adds
+    categories to each column that were not present in the original dataset, but are present in other datasets.
+
+    :param df: Pass in the dataframe to be modified
+    :return: The dataframe with the columns casted as categories
+    """
+    mapping_category_to_col = {
+        "Strain": ['Klebsiella variicola', 'Kosakonia sacchari'],
+        'Fermentation Scale': ['14L', '150K'],
+        'Ingredient 1': ['40% Sucrose', '45.5% Sucrose'],
+        'Ingredient 2': ['8% KH2PO4', '10% Maltodextrin', '22.75% Inulin'],
+        'Ingredient 3': ['10.2% K2HPO4', '0.5% MgSO4'],
+        'Ingredient 4': [],
+        'Container': ['Foil pouch']
+    }
+    for col, categories in mapping_category_to_col.items():
+        if col in df.columns:
+            df[col] = df[col].astype("category").cat.add_categories(categories)
+
+    return df
 
 
 def pivot_on_seed_app():
@@ -57,9 +84,10 @@ def data_cleaning(df):
     df = df.iloc[2:].reset_index()
     df.dropna(subset=['Batch'], inplace=True)
     df.drop(df[df['Remark/AW'] == 'Redo'].index, inplace=True)
+    df = df[df['Extender CFU/mL'].notnull()]
     df = df[
-        ['Batch','Sample Description','Storage form','Temperature-Celsius',
-         'T0','Date','CFU/mL','CFU/g','Extender CFU/mL', 'Extender CFU/mL SD','CV','Water Activity'
+        ['Batch','Sample Description','Storage form','Temperature-Celsius','T0','Date',
+         'Extender CFU/mL','Extender CFU/mL SD','CV','Water Activity'
         ]
     ]
     for idx, row in df.iterrows():
@@ -68,7 +96,7 @@ def data_cleaning(df):
         except Exception as e:
             pass
 
-    for col in ['CFU/mL', 'CFU/g', 'Extender CFU/mL', 'Extender CFU/mL SD', 'CV', 'Water Activity']:
+    for col in ['Extender CFU/mL', 'Extender CFU/mL SD', 'CV', 'Water Activity']:
         df[col] = df[col].replace('#DIV/0!', np.NaN)
         df[col] = df[col].astype(float)
 
@@ -86,7 +114,7 @@ def pivot_on_seed(df):
     pivot_rawcfu.columns = [f"W{week}_{scale}" for scale, week in pivot_rawcfu.columns.to_list()]
     
     # remove cols that cause duplicated samples
-    cfu = df.drop(['CFU/mL', 'CFU/g','CV (%)', 'Extender CFU/mL', 'Extender CFU/mL SD',
+    cfu = df.drop(['Extender CFU/mL', 'Extender CFU/mL SD', 'CV (%)',
                    'Water Activity','Time point (day)', 'Time point (week)'], axis=1)
     cfu = cfu.drop_duplicates(subset='FD Run ID').reset_index(drop=True)
     
