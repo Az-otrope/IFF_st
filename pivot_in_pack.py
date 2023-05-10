@@ -40,6 +40,8 @@ def cast_df_columns(df):
 def pivot_in_pack_app():
     st.title('Pivot In-pack Data Dashboard')
     st.subheader('New Sample Information Data Entry')
+    
+    st.subheader('Experimental Data')
     df = upload_dataset()
     # st.write(st.session_state)
     if len(df) > 0:
