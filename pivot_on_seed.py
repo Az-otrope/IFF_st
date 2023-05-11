@@ -84,10 +84,9 @@ def data_cleaning(df):
     df = df.iloc[2:].reset_index()
     df.dropna(subset=['Batch'], inplace=True)
     df.drop(df[df['Remark/AW'] == 'Redo'].index, inplace=True)
-    df = df[df['Extender CFU/mL'].notnull()]
     df = df[
-        ['Batch','Sample Description','Storage form','Temperature-Celsius','T0','Date',
-         'Extender CFU/mL','Extender CFU/mL SD','CV','Water Activity'
+        ['Batch','Sample Description','Storage form','Temperature-Celsius','T0','Date', 'CFU/mL', 'SD CFU/mL',
+         'Extender CFU/mL','SD Extender CFU/mL','CV','Water Activity'
         ]
     ]
     for idx, row in df.iterrows():
@@ -96,7 +95,7 @@ def data_cleaning(df):
         except Exception as e:
             pass
 
-    for col in ['Extender CFU/mL', 'Extender CFU/mL SD', 'CV', 'Water Activity']:
+    for col in ['CFU/mL', 'SD CFU/mL', 'Extender CFU/mL', 'SD Extender CFU/mL', 'CV', 'Water Activity']:
         df[col] = df[col].replace('#DIV/0!', np.NaN)
         df[col] = df[col].astype(float)
 
@@ -109,12 +108,12 @@ def pivot_on_seed(df):
     df = data_cleaning(df)
     df = feature_eng(df)
 
-    pivot_rawcfu = df.pivot(index='FD Run ID', columns='Time point (week)',
-                            values=['Extender CFU/mL', 'Extender CFU/mL SD', 'Water Activity'])
+    pivot_rawcfu = df.pivot(index='FD Run ID', columns='Time point (week)', 
+                            values=['CFU/mL','Extender CFU/mL','Water Activity'])
     pivot_rawcfu.columns = [f"W{week}_{scale}" for scale, week in pivot_rawcfu.columns.to_list()]
     
     # remove cols that cause duplicated samples
-    cfu = df.drop(['Extender CFU/mL', 'Extender CFU/mL SD', 'CV (%)',
+    cfu = df.drop(['CFU/mL','SD CFU/mL','Extender CFU/mL', 'SD Extender CFU/mL', 'CV (%)',
                    'Water Activity','Time point (day)', 'Time point (week)'], axis=1)
     cfu = cfu.drop_duplicates(subset='FD Run ID').reset_index(drop=True)
     

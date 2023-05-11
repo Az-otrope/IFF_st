@@ -95,7 +95,7 @@ def data_cleaning(df):
     df.drop(df[df['Remark/AW'] == 'Redo'].index, inplace=True)
     df = df[
         ['Batch','Sample Description','Storage form','Temperature-Celsius',
-         'T0','Date','CFU/mL','CFU/g','Extender CFU/mL', 'Extender CFU/mL SD','CV','Water Activity'
+         'T0','Date','CFU/mL','CFU/g','CV','Water Activity'
         ]
     ]
     for idx, row in df.iterrows():
@@ -104,7 +104,7 @@ def data_cleaning(df):
         except Exception as e:
             pass
 
-    for col in ['CFU/mL', 'CFU/g', 'Extender CFU/mL', 'Extender CFU/mL SD', 'CV', 'Water Activity']:
+    for col in ['CFU/mL', 'CFU/g', 'CV', 'Water Activity']:
         df[col] = df[col].replace('#DIV/0!', np.NaN)
         df[col] = df[col].astype(float)
 
@@ -121,8 +121,7 @@ def pivot_in_pack(df):
     pivot_rawcfu.columns = [f"W{week}_{scale}" for scale, week in pivot_rawcfu.columns.to_list()]
     
     # remove cols that cause duplicated samples
-    cfu = df.drop(['CFU/mL', 'CFU/g','CV (%)', 'Extender CFU/mL', 'Extender CFU/mL SD',
-                   'Water Activity','Time point (day)', 'Time point (week)'], axis=1)
+    cfu = df.drop(['CFU/mL', 'CFU/g','CV (%)','Water Activity','Time point (day)', 'Time point (week)'], axis=1)
     cfu = cfu.drop_duplicates(subset='FD Run ID').reset_index(drop=True)
     
     # join the pivot df with the original info
