@@ -17,6 +17,7 @@ def cast_df_columns(df):
     mapping_category_to_col = {
         "Strain": ['Klebsiella variicola', 'Kosakonia sacchari'],
         'Fermentation Scale': ['14L', '150K'],
+        'Cryo mix': ['DSR', 'PVT70%', 'SKP']
         'Ingredient 1': ['40% Sucrose', '45.5% Sucrose'],
         'Ingredient 2': ['8% KH2PO4', '10% Maltodextrin', '22.75% Inulin'],
         'Ingredient 3': ['10.2% K2HPO4', '0.5% MgSO4'],
@@ -24,8 +25,11 @@ def cast_df_columns(df):
     }
     for col, categories in mapping_category_to_col.items():
         if col in df.columns:
-            #df[col] = df[col].astype("category").cat.add_categories(categories)
-            df[col] = df[col].astype("category")
+            ## This only works with new variables to add in, can't work if the values already exist 
+            df[col] = df[col].astype("category").cat.add_categories(categories)
+            
+            ## Turn the current values into selectable 
+            #df[col] = df[col].astype("category")
 
     return df
 
