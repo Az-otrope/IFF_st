@@ -43,7 +43,8 @@ def sample_info_app():
     if len(df) > 0:
         df_v = cast_df_columns(df)
         df_v0 = sample_info(df_v)
-        df_v0 = st.experimental_data_editor(df_v0, num_rows="dynamic")
+        st.dataframe(df_v0)
+        #df_v0 = st.experimental_data_editor(df_v0, num_rows="dynamic")
         st.write(df_v0.shape)
     ##new_dataframe = pd.concat([old_dataframe, new_dataframe])
     #
