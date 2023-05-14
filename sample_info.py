@@ -21,7 +21,7 @@ def cast_df_columns(df):
         'Ingredient 1': ['40% Sucrose', '45.5% Sucrose'],
         'Ingredient 2': ['8% KH2PO4', '10% Maltodextrin', '22.75% Inulin'],
         'Ingredient 3': ['10.2% K2HPO4', '0.5% MgSO4'],
-        'Container': ['Foil pouch', 'Mylar bag']
+        'Container': ['Foil pouch']
     }
     for col, categories in mapping_category_to_col.items():
         if col in df.columns:
@@ -38,13 +38,28 @@ def sample_info_app():
     st.title('WP4 FD Sample Information ')
     st.subheader('New Sample Information Data Entry')
     
+    empty_df = pd.DataFrame(columns=[
+       'FD sample ID', 'FD Run ID', 'Strain', 'EFT date', 'Broth ID',
+       'Fermentation Scale', 'Ferm condition', 'EFT (hr)',
+       'Broth titer (CFU/mL)', 'Broth age (day)', 'Pelletization date',
+       'Cryo mix', 'Ingredient 1', 'Ingredient 2', 'Ingredient 3',
+       'Ingredient4', 'Cryo mix addition rate', 'FD start date',
+       'FD cycle recipe', 'FD pressure (mTorr)', 'FD run time (hr)',
+       'Primary ramp rate (C/min)', 'PA receive date', 'Dried appearance',
+       'Container', 'Water activity', 'Viability (CFU/g)']
+    )
+    
+    #container = st.empty()
+    sample_df = cast_df_columns(empty_df)
+    sample_df = st.experimental_data_editor(sample_df, num_rows='dynamic')
+    
     df = upload_dataset()
     # st.write(st.session_state)
     if len(df) > 0:
         df_v = cast_df_columns(df)
         df_v0 = sample_info(df_v)
-        st.dataframe(df_v0)
-        #df_v0 = st.experimental_data_editor(df_v0, num_rows="dynamic")
+        #st.dataframe(df_v0)
+        df_v0 = st.experimental_data_editor(df_v0, num_rows="dynamic")
         st.write(df_v0.shape)
     ##new_dataframe = pd.concat([old_dataframe, new_dataframe])
     #
