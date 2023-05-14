@@ -1,4 +1,6 @@
 import streamlit as st
+from streamlit.components.v1 import experimental
+
 import pandas as pd
 import numpy as np
 
@@ -38,20 +40,24 @@ def sample_info_app():
     st.title('WP4 FD Sample Information ')
     st.subheader('New Sample Information Data Entry')
     
-    empty_df = pd.DataFrame(columns=[
-       'FD sample ID', 'FD Run ID', 'Strain', 'EFT date', 'Broth ID',
-       'Fermentation Scale', 'Ferm condition', 'EFT (hr)',
-       'Broth titer (CFU/mL)', 'Broth age (day)', 'Pelletization date',
-       'Cryo mix', 'Ingredient 1', 'Ingredient 2', 'Ingredient 3',
-       'Ingredient4', 'Cryo mix addition rate', 'FD start date',
-       'FD cycle recipe', 'FD pressure (mTorr)', 'FD run time (hr)',
-       'Primary ramp rate (C/min)', 'PA receive date', 'Dried appearance',
-       'Container', 'Water activity', 'Viability (CFU/g)']
-    )
+    with st.form("my_form"):
     
-    #container = st.empty()
-    sample_df = cast_df_columns(empty_df)
-    sample_df = st.experimental_data_editor(sample_df, num_rows='dynamic')
+        empty_df = pd.DataFrame(columns=[
+           'FD sample ID', 'FD Run ID', 'Strain', 'EFT date', 'Broth ID',
+           'Fermentation Scale', 'Ferm condition', 'EFT (hr)',
+           'Broth titer (CFU/mL)', 'Broth age (day)', 'Pelletization date',
+           'Cryo mix', 'Ingredient 1', 'Ingredient 2', 'Ingredient 3',
+           'Cryo mix addition rate', 'FD start date',
+           'FD cycle recipe', 'FD pressure (mTorr)', 'FD run time (hr)',
+           'Primary ramp rate (C/min)', 'PA receive date', 'Dried appearance',
+           'Container', 'Water activity', 'Viability (CFU/g)']
+        )
+        
+        component_value = experimental.dataframe_input(empty_df, add_rows=True)
+        #container = st.empty()
+        sample_df = cast_df_columns(empty_df)
+        submitted = st.form_submit_button("Submit")
+        #sample_df = st.experimental_data_editor(sample_df, num_rows='dynamic')
     
     df = upload_dataset()
     # st.write(st.session_state)
