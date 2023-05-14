@@ -17,19 +17,20 @@ def cast_df_columns(df):
     mapping_category_to_col = {
         "Strain": ['Klebsiella variicola', 'Kosakonia sacchari'],
         'Fermentation Scale': ['14L', '150K'],
-        'Cryo mix': ['DSR', 'PVT70%', 'SKP']
+        'Cryo mix': ['DSR', 'PVT70%', 'SKP'],
         'Ingredient 1': ['40% Sucrose', '45.5% Sucrose'],
         'Ingredient 2': ['8% KH2PO4', '10% Maltodextrin', '22.75% Inulin'],
         'Ingredient 3': ['10.2% K2HPO4', '0.5% MgSO4'],
-        'Container': ['Foil pouch']
+        'Container': ['Foil pouch', 'Mylar bag']
     }
     for col, categories in mapping_category_to_col.items():
         if col in df.columns:
             ## This only works with new variables to add in, can't work if the values already exist 
-            df[col] = df[col].astype("category").cat.add_categories(categories)
+            ## error msg: new categories must not include old categories: {'Klebsiella variicola', 'Kosakonia sacchari'}
+            #df[col] = df[col].astype("category").cat.add_categories(categories)
             
             ## Turn the current values into selectable 
-            #df[col] = df[col].astype("category")
+            df[col] = df[col].astype("category")
 
     return df
 
@@ -41,7 +42,6 @@ def sample_info_app():
     # st.write(st.session_state)
     if len(df) > 0:
         df_v = cast_df_columns(df)
-        #st.subheader('Current Sample Information Compilation')
         df_v0 = sample_info(df_v)
         df_v0 = st.experimental_data_editor(df_v0, num_rows="dynamic")
         st.write(df_v0.shape)
