@@ -33,7 +33,7 @@ def cast_df_columns(df):
             ## Turn the current values into selectable 
             #df[col] = df[col].astype("category")
 
-    return df
+    return st.experimental_data_editor(df)
 
 def sample_info_app():
     st.title('WP4 FD Sample Information ')
