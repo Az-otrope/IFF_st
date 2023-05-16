@@ -22,7 +22,7 @@ def cast_df_columns(df):
         'Ingredient 1': ['40% Sucrose', '45.5% Sucrose'],
         'Ingredient 2': ['8% KH2PO4', '10% Maltodextrin', '22.75% Inulin'],
         'Ingredient 3': ['10.2% K2HPO4', '0.5% MgSO4'],
-        'Container': ['Foil pouch']
+        'Container': ['Foil pouch','Mylar bag']
     }
     for col, categories in mapping_category_to_col.items():
         if col in df.columns:
@@ -39,24 +39,36 @@ def sample_info_app():
     st.title('WP4 FD Sample Information ')
     st.subheader('New Sample Information Data Entry')
     
-    with st.form("my_form"):
+    #with st.form("my_form"):
     
-        empty_df = pd.DataFrame(columns=[
-           'FD sample ID', 'FD Run ID', 'Strain', 'EFT date', 'Broth ID',
-           'Fermentation Scale', 'Ferm condition', 'EFT (hr)',
-           'Broth titer (CFU/mL)', 'Broth age (day)', 'Pelletization date',
-           'Cryo mix', 'Ingredient 1', 'Ingredient 2', 'Ingredient 3',
-           'Cryo mix addition rate', 'FD start date',
-           'FD cycle recipe', 'FD pressure (mTorr)', 'FD run time (hr)',
-           'Primary ramp rate (C/min)', 'PA receive date', 'Dried appearance',
-           'Container', 'Water activity', 'Viability (CFU/g)']
-        )
+    empty_df = pd.DataFrame(columns=[
+       'FD sample ID', 'FD Run ID', 'Strain', 'EFT date', 'Broth ID',
+       'Fermentation Scale', 'Ferm condition', 'EFT (hr)',
+       'Broth titer (CFU/mL)', 'Broth age (day)', 'Pelletization date',
+       'Cryo mix', 'Ingredient 1', 'Ingredient 2', 'Ingredient 3',
+       'Cryo mix addition rate', 'FD start date',
+       'FD cycle recipe', 'FD pressure (mTorr)', 'FD run time (hr)',
+       'Primary ramp rate (C/min)', 'PA receive date', 'Dried appearance',
+       'Container', 'Water activity', 'Viability (CFU/g)']
+    )
+    
+    sample_df = cast_df_columns(empty_df)
+    sample_df = st.experimental_data_editor(sample_df, num_rows='dynamic')
+    
+    sample_id = st.text_input()
+    run_id = st.text_input()
+    strain = st.selectbox(['Klebsiella variicola', 'Kosakonia sacchari'])
+    
+    sample_df = sample_df.append({'FD sample ID': sample_id, 'FD Run ID': run_id, 'Strain': strain},
+                                 ignore_index=True)
+    #submitted = st.form_submit_button("Submit")
         
-        #component_value = experimental.dataframe_input(empty_df, add_rows=True)
-        sample_df = cast_df_columns(empty_df)
-        submitted = st.form_submit_button("Submit")
-        sample_df = st.experimental_data_editor(sample_df, num_rows='dynamic')
-    
+    #if submitted:
+        ## Get the updated DataFrame from the component value
+        #updated_df = st.experimental_data_editor(sample_df, num_rows='dynamic')
+        ##updated_df = pd.DataFrame(sample_df)
+        ##st.write(updated_df)
+        
     df = upload_dataset()
     # st.write(st.session_state)
     if len(df) > 0:

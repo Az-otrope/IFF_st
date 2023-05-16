@@ -328,31 +328,3 @@
 #     st.altair_chart(c, use_container_width=True)
 # >>>>>>> 5d7d72041f3850e26b9559ff96e61ea3c9588d97
 
-#import streamlit as st
-#import pandas as pd
-#
-## Create a sample DataFrame
-#df = pd.DataFrame({'A': ['option1', 'option2', 'option3']})
-#
-## Display the selectbox
-#selected_option = st.selectbox('Select an option', df['A'].tolist())
-#
-## Print the selected option
-#st.write('You selected:', selected_option)
-
-import streamlit as st
-import pandas as pd
-from streamlit.components.v1 import experimental
-
-# Create a sample DataFrame
-df = pd.DataFrame({'A': [1, 2, 3, 4], 'B': ['apple', 'banana', 'apple', 'orange']})
-
-# Use the DataFrameInput component to display the DataFrame with a selectbox for column B
-with st.form("my_form"):
-    component_value = experimental.dataframe_input(df, add_rows=True)
-    submitted = st.form_submit_button("Submit")
-
-if submitted:
-    # Get the updated DataFrame from the component value
-    updated_df = pd.DataFrame(component_value)
-    st.write(updated_df)
