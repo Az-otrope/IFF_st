@@ -1,5 +1,4 @@
 import streamlit as st
-from streamlit.components.v1 import experimental
 
 import pandas as pd
 import numpy as np
@@ -53,11 +52,10 @@ def sample_info_app():
            'Container', 'Water activity', 'Viability (CFU/g)']
         )
         
-        component_value = experimental.dataframe_input(empty_df, add_rows=True)
-        #container = st.empty()
+        #component_value = experimental.dataframe_input(empty_df, add_rows=True)
         sample_df = cast_df_columns(empty_df)
         submitted = st.form_submit_button("Submit")
-        #sample_df = st.experimental_data_editor(sample_df, num_rows='dynamic')
+        sample_df = st.experimental_data_editor(sample_df, num_rows='dynamic')
     
     df = upload_dataset()
     # st.write(st.session_state)
