@@ -14,7 +14,7 @@ if 'pivot_df' not in st.session_state:
     st.session_state['pivot_df'] = pd.DataFrame()
 
 # DASHBOARD
-add_sidebar = st.sidebar.selectbox('Project', ('Sample Information','Pivot In-pack','Pivot On-seed','Boost'))
+add_sidebar = st.sidebar.selectbox('Option', ('Sample Information','Pivot In-pack','Pivot On-seed','Boost'))
                                   
 
 if __name__ == '__main__':
