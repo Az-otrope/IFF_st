@@ -28,10 +28,10 @@ def cast_df_columns(df):
         if col in df.columns:
             ## This only works with new variables to add in, can't work if the values already exist 
             ## error msg: new categories must not include old categories: {'Klebsiella variicola', 'Kosakonia sacchari'}
-            #df[col] = df[col].astype("category").cat.add_categories(categories)
+            df[col] = df[col].astype("category").cat.add_categories(categories)
             
             ## Turn the current values into selectable 
-            df[col] = df[col].astype("category")
+            #df[col] = df[col].astype("category")
 
     return df
 
@@ -73,10 +73,8 @@ def sample_info_app():
     df = upload_dataset()
     # st.write(st.session_state)
     if len(df) > 0:
-        df_v = cast_df_columns(df)
-        df_v0 = sample_info(df_v)
+        df_v0 = sample_info(df)
         st.dataframe(df_v0)
-        #df_v0 = st.experimental_data_editor(df_v0, num_rows="dynamic")
         st.write(df_v0.shape)
     ##new_dataframe = pd.concat([old_dataframe, new_dataframe])
     #
