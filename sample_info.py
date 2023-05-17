@@ -54,8 +54,8 @@ def sample_info_app():
           'Container', 'Water activity', 'Viability (CFU/g)']
         )
         
+        #empty_df = cast_df_columns(empty_df)
         empty_df = st.experimental_data_editor(empty_df, num_rows='dynamic')
-        sample_df = cast_df_columns(empty_df)
         
         sample_id = st.text_input()
         run_id = st.text_input()
@@ -75,9 +75,9 @@ def sample_info_app():
             'EFT (hr)': eft,
             'Broth titer (CFU/mL)': broth_titer
             }
-        df_v1 = sample_df.append(new_row, ignore_index=True)
+        sample_df = empty_df.append(new_row, ignore_index=True)
         #updated_df = pd.DataFrame(sample_df)
-        st.write(df_v1)
+        st.write(sample_df)
         
     st.subheader('Past Sample Information Compilation')    
     df = upload_dataset()
