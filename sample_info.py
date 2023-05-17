@@ -87,8 +87,6 @@ def sample_info_app():
         st.dataframe(df_v0)
         st.write(df_v0.shape)
     ##new_dataframe = pd.concat([old_dataframe, new_dataframe])
-    #
-    #return old_dataframe
     
 def data_cleaning(df):
     df.columns = [column.strip() for column in df.columns]
