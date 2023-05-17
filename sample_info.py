@@ -33,7 +33,8 @@ def cast_df_columns(df):
             ## Turn the current values into selectable 
             #df[col] = df[col].astype("category")
 
-    return st.experimental_data_editor(df)
+    return df
+
 
 def sample_info_app():
     st.title('WP4 FD Sample Information ')
@@ -53,21 +54,30 @@ def sample_info_app():
           'Container', 'Water activity', 'Viability (CFU/g)']
         )
         
-        empty_df = cast_df_columns(empty_df)
         empty_df = st.experimental_data_editor(empty_df, num_rows='dynamic')
-        #
-        #sample_id = st.text_input()
-        #run_id = st.text_input()
-        #strain = st.selectbox(['Klebsiella variicola', 'Kosakonia sacchari'])
-        #
-        #sample_df = sample_df.append({'FD sample ID': sample_id, 'FD Run ID': run_id, 'Strain': strain},
-        #                             ignore_index=True)
+        sample_df = cast_df_columns(empty_df)
+        
+        sample_id = st.text_input()
+        run_id = st.text_input()
+        broth_id = st.text_input()
+        ferm_cond = st.text_input()
+        eft = st.number_input()
+        broth_titer = st.number_input()
+        
         submitted = st.form_submit_button("Submit")
         
     if submitted:
-        df_v1 = st.experimental_data_editor(empty_df, num_rows='dynamic')
+        new_row = {
+            'FD sample ID': sample_id,
+            'FD Run ID': run_id,
+            'Broth ID': broth_id,
+            'Ferm condition': ferm_cond,
+            'EFT (hr)': eft,
+            'Broth titer (CFU/mL)': broth_titer
+            }
+        df_v1 = sample_df.append(new_row, ignore_index=True)
         #updated_df = pd.DataFrame(sample_df)
-        #st.write(updated_df)
+        st.write(df_v1)
         
     st.subheader('Past Sample Information Compilation')    
     df = upload_dataset()
