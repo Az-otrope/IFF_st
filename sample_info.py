@@ -41,21 +41,21 @@ def sample_info_app():
     st.warning("EXPERIMENTAL STATE")
     st.subheader('New Sample Information Data Entry')
     
-    with st.form("my_form"):
+    empty_df = pd.DataFrame(columns=[
+      'FD sample ID', 'FD Run ID', 'Strain', 'EFT date', 'Broth ID',
+      'Fermentation Scale', 'Ferm condition', 'EFT (hr)',
+      'Broth titer (CFU/mL)', 'Broth age (day)', 'Pelletization date',
+      'Cryo mix', 'Ingredient 1', 'Ingredient 2', 'Ingredient 3',
+      'Cryo mix addition rate', 'FD start date',
+      'FD cycle recipe', 'FD pressure (mTorr)', 'FD run time (hr)',
+      'Primary ramp rate (C/min)', 'PA receive date', 'Dried appearance',
+      'Container', 'Water activity', 'Viability (CFU/g)']
+    )
     
-        empty_df = pd.DataFrame(columns=[
-          'FD sample ID', 'FD Run ID', 'Strain', 'EFT date', 'Broth ID',
-          'Fermentation Scale', 'Ferm condition', 'EFT (hr)',
-          'Broth titer (CFU/mL)', 'Broth age (day)', 'Pelletization date',
-          'Cryo mix', 'Ingredient 1', 'Ingredient 2', 'Ingredient 3',
-          'Cryo mix addition rate', 'FD start date',
-          'FD cycle recipe', 'FD pressure (mTorr)', 'FD run time (hr)',
-          'Primary ramp rate (C/min)', 'PA receive date', 'Dried appearance',
-          'Container', 'Water activity', 'Viability (CFU/g)']
-        )
-        
-        #empty_df = cast_df_columns(empty_df)
-        sample_df = st.experimental_data_editor(empty_df, num_rows='dynamic')
+    with st.form("my_form"):
+
+        sample_df = cast_df_columns(empty_df)
+        sample_df = st.experimental_data_editor(sample_df, num_rows='dynamic')
         
         sample_id = st.text_input()
         run_id = st.text_input()
@@ -76,7 +76,7 @@ def sample_info_app():
             'Broth titer (CFU/mL)': broth_titer
             }
         sample_df = sample_df.append(new_row, ignore_index=True)
-        #updated_df = pd.DataFrame(sample_df)
+        
     st.write(sample_df)
         
     st.subheader('Past Sample Information Compilation')    
