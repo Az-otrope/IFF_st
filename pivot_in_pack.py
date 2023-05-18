@@ -108,7 +108,7 @@ def data_cleaning(df):
         df[col] = df[col].replace('#DIV/0!', np.NaN)
         df[col] = df[col].astype(float)
 
-    df = df.rename(columns={'Batch': 'FD Run ID', 'Temperature-Celsius': 'Temperature (C)', 'CV': 'CV (%)'})
+    df = df.rename(columns={'Batch': 'FD Run ID', 'CV': 'CV (%)'})
 
     return df
 
@@ -121,7 +121,8 @@ def pivot_in_pack(df):
     pivot_rawcfu.columns = [f"W{week}_{scale}" for scale, week in pivot_rawcfu.columns.to_list()]
     
     # remove cols that cause duplicated samples
-    cfu = df.drop(['CFU/mL', 'CFU/g','CV (%)','Water Activity','Time point (day)', 'Time point (week)'], axis=1)
+    cfu = df.drop(['Sample Description','Storage form','Temperature-Celsius',
+                   'CFU/mL','CFU/g','CV (%)','Water Activity','Time point (day)','Time point (week)'], axis=1)
     cfu = cfu.drop_duplicates(subset='FD Run ID').reset_index(drop=True)
     
     # join the pivot df with the original info
