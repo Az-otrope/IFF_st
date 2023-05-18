@@ -9,7 +9,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-from utils import upload_dataset
+from utils import upload_dataset, progress_bar
 
 
 def cast_df_columns(df):
@@ -43,8 +43,10 @@ def pivot_in_pack_app():
     
     st.subheader('Experimental Data')
     df = upload_dataset()
-    # st.write(st.session_state)
+        
     if len(df) > 0:
+        progress_bar()
+        
         df_v = cast_df_columns(df)
         df_v0, df_v1 = pivot_in_pack(df_v)
         st.session_state['pivot_df'] = df_v1.to_dict("records")

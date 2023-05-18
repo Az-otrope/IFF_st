@@ -7,6 +7,7 @@ Created on Mon May  1 00:28:31 2023
 """
 import pandas as pd
 import streamlit as st
+import time
 
 
 def upload_dataset() -> pd.DataFrame:
@@ -25,6 +26,18 @@ def upload_dataset() -> pd.DataFrame:
         
     data = pd.read_csv(file)
     file.close()
-    st.write("File uploaded successfully")
 
     return data
+
+
+def progress_bar():
+    """
+    Display the progress bar of work in progress
+    """
+    progress_bar = st.progress(0)
+    
+    for percent_complete in range(100):
+        time.sleep(0.05)
+        progress_bar.progress(percent_complete+1)
+    
+    st.write("File uploaded successfully")
