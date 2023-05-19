@@ -2,8 +2,7 @@ import streamlit as st
 
 import pandas as pd
 import numpy as np
-
-#from utils import upload_dataset
+from st_aggrid import AgGrid
 
 
 def cast_df_columns(df):
@@ -15,6 +14,7 @@ def cast_df_columns(df):
     :param df: Pass in the dataframe to be modified
     :return: The dataframe with the columns casted as categories
     """
+    
     mapping_category_to_col = {
         'Strain': ['Klebsiella variicola', 'Kosakonia sacchari'],
         'Fermentation Scale': ['14L', '150K'],
@@ -39,8 +39,20 @@ def cast_df_columns(df):
 
 def sample_info_app():
     st.title('WP4 FD Sample Information ')
-    st.warning("EXPERIMENTAL STATE")
-    st.subheader('New Samples Information Data Entry')
+
+    st.subheader('New Sample Information Data Entry')
+    
+    with st.expander('Instruction for entering new sample information'):
+        st.write('''
+                 * Add rows: scroll to the bottom-most row and click on the “+” sign in any cell
+                 * Delete rows: select one or more rows and press the `delete` key on your keyboard 
+                 * Enter the date in `MM/DD/YY` format. 
+                 * Enter numerical values in full (i.e. NOT scientific)
+                 * Dropdown features: 
+                     * Strain, Fermentation Scale, Cryo mix, 
+                     * Ingredient 1, Ingredient 2, Ingredient 3, Container
+                 ''')
+    
     
     # Can't have a selectbox but will concatenate
 # =============================================================================
@@ -149,6 +161,8 @@ def sample_info_app():
         
     if st.button('Submit'):
         st.subheader('Sample Information Compilation')
+        
+        # Process new dataframe
         df_v = sample_info(input_df)
 
         # Load the historical dataset    
@@ -157,12 +171,25 @@ def sample_info_app():
         df_v0 = data_cleaning(df)
         df_v0 = sample_info(df_v0)
         
-        updated_df = df_v0.append(df_v)
-        st.write(updated_df)
-        st.write(updated_df.shape)
-   
+        # Join the new inputs to historical dataset
+        df_v1 = df_v0.append(df_v, ignore_index=True)
+        st.write(df_v1)
+        st.write(df_v1.shape)
+        st.download_button(
+            label="Download Sample Info report as CSV",
+            data=df_v1.to_csv(),
+            file_name='sample_info.csv',
+            mime='text/csv')
     
 def data_cleaning(df):
+    """
+    This function cleans up the historical dataset resulting in the desired format
+    
+    INPUT: a dataframe containing current data
+    
+    OUTPUT: an engineered dataframe with features selected for further analysis
+    """
+    
     df.columns = [column.strip() for column in df.columns]
     df.drop(['Storage tracking','Seed treatment','Ingredient4','Yield (%)','Log loss','Note'], axis=1, inplace=True)
     df.dropna(subset=['FD Run ID'], inplace=True)
@@ -176,6 +203,14 @@ def data_cleaning(df):
 
 
 def feature_eng(df):
+    """
+    This function format datetime and numerical features in the desirable format; 
+    then create a column "Cryo mix Coef" containing a coefficient associates to each cryo-mix type. 
+    
+    INPUT: a dataframe with user inputs
+    
+    OUTPUT: a dataframe with features engineered for further analysis
+    """
     
     # Time features
     time_feat = ['EFT date','Pelletization date','FD start date','PA receive date']
@@ -183,7 +218,7 @@ def feature_eng(df):
     for col in time_feat:
         df[col] = pd.to_datetime(df[col],infer_datetime_format=True,format="%m/%d/%y",errors='coerce')
         
-    # If the user inputs 'Dry in PA', the command above turns the str to NaT. Thus, have to return the str
+    # If the user inputs 'Dry in PA', the command above turns the str to NaT. Thus, have to revert the input
     df['PA receive date'] = df['PA receive date'].replace({np.nan: 'Dry in PA'})
     
     
@@ -197,42 +232,21 @@ def feature_eng(df):
         
     # Coefficient    
     cryo_coef = {
-    'PVT70%': 0.285,
-    'DSR': 0.342,
-    'SKP': 0.380
+        'PVT70%': 0.285,
+        'DSR': 0.342,
+        'SKP': 0.380
     }
     
     df['Cryo mix Coef'] = df['Cryo mix'].map(cryo_coef)
     
     return df
-    # Numerical features
 
 
-# =============================================================================
-#     num_feat = ['EFT (hr)','Broth titer (CFU/mL)','Broth age (day)','Cryo mix addition rate',
-#                 'FD run time (hr)','Primary ramp rate (C/min)','Viability (CFU/g)']
-#     
-#     for col in num_feat:
-#         df[col] = df[col].astype('float')
-# 
-#     
-#     #Datetime features
-# 
-#     time_feat = ['EFT date','Pelletization date','FD start date','PA receive date']
-#     
-#     for col in time_feat:
-#         df[col] = pd.to_datetime(df[col],infer_datetime_format=True,format="%m/%d/%y",errors='coerce')
-#     
-#     df['PA receive date'] = df['PA receive date'].replace({np.nan: 'Dry in PA'}
-
-    
-    # Coefficient
-    cryo_coef = {'PVT70%': 0.285, 'DSR': 0.342, 'SKP': 0.380}
-    
-    df['Cryo mix Coef'] = df['Cryo mix'].map(cryo_coef)
-    
-    return df
 def cal_yield(row):
+    """
+    Calculate broth's yield
+    """
+    
     if row.isna().any():
         return np.nan
     else:
@@ -240,6 +254,10 @@ def cal_yield(row):
 
     
 def log_loss(x):
+    """
+    Calculate log10 loss of yield
+    """
+    
     if pd.isna(x):
         return np.nan
     else:
@@ -247,6 +265,16 @@ def log_loss(x):
 
     
 def sample_info(df):
+    """
+    This function takes in a dataframe containing user inputs, then formats the datetime, numerical and cateogrical features.
+    This function performs calcualtion on the material's yield and log loss. 
+    It returns a dataframe with sample's information entered by the user and according calcualted values
+    
+    INPUT: a dataframe with user inputs
+    
+    OUTPUT: a dataframe with sample's information and analysis data
+    """
+    
     df = feature_eng(df)
     
     to_cal = df[['Broth titer (CFU/mL)','Viability (CFU/g)','Cryo mix Coef']]
