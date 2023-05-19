@@ -39,11 +39,38 @@ def cast_df_columns(df):
 
 def pivot_in_pack_app():
     st.title('Pivot In-pack Data Dashboard')
+    
     st.subheader('New Sample Information Data Entry')
     
+    with st.expander('Instruction for entering new sample information'):
+        st.write('''
+                 * Add rows: scroll to the bottom-most row and click on the “+” sign in any cell
+                 * Delete rows: select one or more rows and press the `delete` key on your keyboard 
+                 * Enter the date in `MM/DD/YY` format. 
+                 * Enter numerical values in full (i.e. NOT scientific)
+                 * Dropdown features: 
+                     * Strain, Fermentation Scale, Cryo mix, 
+                     * Ingredient 1, Ingredient 2, Ingredient 3, Container
+                 ''')
+    
+    empty_df = pd.DataFrame(
+        {
+            'FD Run ID':pd.Series(dtype='str'), 
+            'Storage form':pd.Series(dtype='str'), 
+            'Temperature (C)':pd.Series(dtype='int'), 
+            'Desiccant':pd.Series(dtype='str')
+            }
+        )
+    
+    input_df = st.experimental_data_editor(empty_df, num_rows='dynamic')
+    
+    if st.button('Submit'):
+        pass
+    
+    
     st.subheader('Experimental Data')
-    df = upload_dataset()
-        
+    
+    df = upload_dataset()    
     if len(df) > 0:
         progress_bar()
         
@@ -56,6 +83,8 @@ def pivot_in_pack_app():
             st.write(df_v0.shape)
 
             st.subheader('Processed CFU Plating Data')
+            # Join with input_df HERE
+            
             df_v1 = st.experimental_data_editor(df_v1, num_rows="dynamic")
             st.write(df_v1.shape)
             st.download_button(
