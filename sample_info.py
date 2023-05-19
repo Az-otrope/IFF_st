@@ -3,7 +3,10 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from st_aggrid import AgGrid
+from st_aggrid.grid_options_builder import GridOptionsBuilder
 
+
+st.set_page_config(layout="wide")
 
 def cast_df_columns(df):
     """
@@ -36,9 +39,8 @@ def cast_df_columns(df):
 
     return df
 
-
 def sample_info_app():
-    st.title('WP4 FD Sample Information ')
+    st.title('WP4 FD Sample Information')
 
     st.subheader('New Sample Information Data Entry')
     
@@ -173,7 +175,16 @@ def sample_info_app():
         
         # Join the new inputs to historical dataset
         df_v1 = df_v0.append(df_v, ignore_index=True)
-        st.write(df_v1)
+        
+        gb = GridOptionsBuilder.from_dataframe(df_v1)
+        gb.configure_pagination()
+        gb.configure_side_bar()
+        gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, editable=True)
+        gridOptions = gb.build()
+
+        AgGrid(df_v1, gridOptions=gridOptions, enable_enterprise_modules=True)
+        
+        
         st.write(df_v1.shape)
         st.download_button(
             label="Download Sample Info report as CSV",
