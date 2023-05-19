@@ -2,8 +2,8 @@ import streamlit as st
 
 import pandas as pd
 import numpy as np
-from st_aggrid import AgGrid
-from st_aggrid.grid_options_builder import GridOptionsBuilder
+#from st_aggrid import AgGrid
+#from st_aggrid.grid_options_builder import GridOptionsBuilder
 
 
 st.set_page_config(layout="wide")
@@ -176,15 +176,17 @@ def sample_info_app():
         # Join the new inputs to historical dataset
         df_v1 = df_v0.append(df_v, ignore_index=True)
         
-        gb = GridOptionsBuilder.from_dataframe(df_v1)
-        gb.configure_pagination()
-        gb.configure_side_bar()
-        gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, editable=True)
-        gridOptions = gb.build()
-
-        AgGrid(df_v1, gridOptions=gridOptions, enable_enterprise_modules=True)
+# =============================================================================
+#         gb = GridOptionsBuilder.from_dataframe(df_v1)
+#         gb.configure_pagination()
+#         gb.configure_side_bar()
+#         gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, editable=True)
+#         gridOptions = gb.build()
+# 
+#         AgGrid(df_v1, gridOptions=gridOptions, enable_enterprise_modules=True)
+# =============================================================================
         
-        
+        st.write(df_v1)
         st.write(df_v1.shape)
         st.download_button(
             label="Download Sample Info report as CSV",
