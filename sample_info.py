@@ -2,11 +2,42 @@ import streamlit as st
 
 import pandas as pd
 import numpy as np
+#from utils import upload_dataset
 #from st_aggrid import AgGrid
 #from st_aggrid.grid_options_builder import GridOptionsBuilder
 
 
 st.set_page_config(layout="wide")
+
+def data_cleaning(df):
+    """
+    This function cleans up the historical dataset resulting in the desired format
+    
+    INPUT: a dataframe containing current data
+    
+    OUTPUT: an engineered dataframe with features selected for further analysis
+    """
+    
+    df.columns = [column.strip() for column in df.columns]
+    try:
+        df.drop(['Storage tracking','Seed treatment','Ingredient4','Yield (%)','Log loss','Note'], axis=1, inplace=True)
+    except:
+        pass
+    
+    df.dropna(subset=['FD Run ID'], inplace=True)
+    df['FD run time (hr)'] = df['FD run time (hr)'].apply(lambda x:float(x.split()[0]))
+    
+    df['Viability (CFU/g)'] = df['Viability (CFU/g)'].replace(['#DIV/0!','n/m'], np.NaN)
+    df['Viability (CFU/g)'] = df['Viability (CFU/g)'].astype(float)
+    
+    return df
+
+
+df = pd.read_csv("/Users/miu/IFF_st/Data files/Pivot_SampleInfo_Hist.csv")
+df_v0 = data_cleaning(df)
+
+st.session_state.df = df_v0
+ 
 
 def cast_df_columns(df):
     """
@@ -158,23 +189,34 @@ def sample_info_app():
 
 
     input_df = cast_df_columns(empty_df)
-    input_df = st.experimental_data_editor(input_df, num_rows='dynamic')
-
-        
+    
+# =============================================================================
+#     section1 = ['Strain','EFT date','Broth ID','Fermentation Scale','Ferm condition','EFT (hr)','Broth titer (CFU/mL)','Broth age (day)']
+#     section2 = ['Pelletization date','Cryo mix','Ingredient 1','Ingredient 2','Ingredient 3','Cryo mix addition rate']
+#     input1 = st.experimental_data_editor(input_df[section1], num_rows='dynamic')
+#     input2 = st.experimental_data_editor(input_df[section2], num_rows='dynamic')
+# =============================================================================
+# =============================================================================
+#     t_input_df = input_df.T
+#     t_input_df.columns = ['Add new row here']
+# =============================================================================
+    input_df = st.experimental_data_editor(input_df, num_rows="dynamic")
+    
     if st.button('Submit'):
-        st.subheader('Sample Information Compilation')
-        
-        # Process new dataframe
-        df_v = sample_info(input_df)
-
-        # Load the historical dataset    
-        df = pd.read_csv("/Users/miu/IFF_st/Data files/Pivot_SampleInfo_Hist.csv")
-        
-        df_v0 = data_cleaning(df)
-        df_v0 = sample_info(df_v0)
-        
-        # Join the new inputs to historical dataset
-        df_v1 = df_v0.append(df_v, ignore_index=True)
+       st.subheader('Sample Information Compilation')
+       
+       # Process new dataframe
+       df_v = sample_info(input_df)
+       
+       # Load the historical dataset
+       #df = upload_dataset()
+       
+    
+       #df_v0 = data_cleaning(df)
+       df_v0 = sample_info(st.session_state.df)
+       
+       # Join the new inputs to historical dataset
+       df_v1 = df_v0.append(df_v, ignore_index=True)
         
 # =============================================================================
 #         gb = GridOptionsBuilder.from_dataframe(df_v1)
@@ -185,34 +227,16 @@ def sample_info_app():
 # 
 #         AgGrid(df_v1, gridOptions=gridOptions, enable_enterprise_modules=True)
 # =============================================================================
-        
-        st.write(df_v1)
-        st.write(df_v1.shape)
-        st.download_button(
+       
+       st.write(df_v1)
+       st.session_state.df = df_v1
+       st.write(df_v1.shape)
+       st.download_button(
             label="Download Sample Info report as CSV",
             data=df_v1.to_csv(),
             file_name='sample_info.csv',
             mime='text/csv')
-    
-def data_cleaning(df):
-    """
-    This function cleans up the historical dataset resulting in the desired format
-    
-    INPUT: a dataframe containing current data
-    
-    OUTPUT: an engineered dataframe with features selected for further analysis
-    """
-    
-    df.columns = [column.strip() for column in df.columns]
-    df.drop(['Storage tracking','Seed treatment','Ingredient4','Yield (%)','Log loss','Note'], axis=1, inplace=True)
-    df.dropna(subset=['FD Run ID'], inplace=True)
-    
-    df['FD run time (hr)'] = df['FD run time (hr)'].apply(lambda x:float(x.split()[0]))
-    
-    df['Viability (CFU/g)'] = df['Viability (CFU/g)'].replace(['#DIV/0!','n/m'], np.NaN)
-    df['Viability (CFU/g)'] = df['Viability (CFU/g)'].astype(float)
-    
-    return df
+
 
 
 def feature_eng(df):
@@ -295,3 +319,7 @@ def sample_info(df):
     df['Log Loss'] = df['Yield (%)'].apply(log_loss)
     
     return df 
+
+
+
+
