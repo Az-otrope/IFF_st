@@ -33,6 +33,7 @@ def data_cleaning(df):
     return df
 
 
+# TODO: mia use file as drag and drop
 df = pd.read_csv("/Users/miu/IFF_st/Data files/Pivot_SampleInfo_Hist.csv")
 df_v0 = data_cleaning(df)
 
@@ -86,76 +87,6 @@ def sample_info_app():
                      * Ingredient 1, Ingredient 2, Ingredient 3, Container
                  ''')
     
-    
-    # Can't have a selectbox but will concatenate
-# =============================================================================
-#     dtypes = np.dtype(
-#         [
-#             ('FD sample ID', str),
-#             ('FD Run ID', str), 
-#             ('Strain', str), 
-#             ('EFT date', object), 
-#             ('Broth ID', str),
-#             ('Fermentation Scale', str), 
-#             ('Ferm condition', str), 
-#             ('EFT (hr)', float),
-#             ('Broth titer (CFU/mL)', float), 
-#             ('Broth age (day)', float), 
-#             ('Pelletization date', object),
-#             ('Cryo mix', str), 
-#             ('Ingredient 1', str), 
-#             ('Ingredient 2', str), 
-#             ('Ingredient 3', str),
-#             ('Ingredient 4', str), 
-#             ('Cryo mix addition rate', float), 
-#             ('FD start date', object),
-#             ('FD cycle recipe', str), 
-#             ('FD pressure (mTorr)', str), 
-#             ('FD run time (hr)', float),
-#             ('Primary ramp rate (C/min)', float), 
-#             ('PA receive date', object),
-#             ('Dried appearance', str),
-#             ('Container', str), 
-#             ('Water activity', str),
-#             ('Viability (CFU/g)', float) 
-#         ]
-#     )
-#     
-#     empty_df = pd.DataFrame(np.empty(0, dtype=dtypes))
-
-# =============================================================================
-#     empty_df = pd.DataFrame(
-#         {
-#             'FD sample ID':pd.Series(dtype='str'),
-#             'FD Run ID':pd.Series(dtype='str'), 
-#             'Strain':pd.Series(dtype='str'), 
-#             'EFT date':pd.Series(dtype='object'), 
-#             'Broth ID':pd.Series(dtype='str'),
-#             'Fermentation Scale':pd.Series(dtype='str'), 
-#             'Ferm condition':pd.Series(dtype='str'), 
-#             'EFT (hr)':pd.Series(dtype='float'),
-#             'Broth titer (CFU/mL)':pd.Series(dtype='float'), 
-#             'Broth age (day)':pd.Series(dtype='float'), 
-#             'Pelletization date':pd.Series(dtype='object'),
-#             'Cryo mix':pd.Series(dtype='str'), 
-#             'Ingredient 1':pd.Series(dtype='str'), 
-#             'Ingredient 2':pd.Series(dtype='str'), 
-#             'Ingredient 3':pd.Series(dtype='str'),
-#             'Cryo mix addition rate':pd.Series(dtype='float'), 
-#             'FD start date':pd.Series(dtype='object'),
-#             'FD cycle recipe':pd.Series(dtype='str'), 
-#             'FD pressure (mTorr)':pd.Series(dtype='str'), 
-#             'FD run time (hr)':pd.Series(dtype='float'),
-#             'Primary ramp rate (C/min)':pd.Series(dtype='float'), 
-#             'PA receive date':pd.Series(dtype='object'),
-#             'Dried appearance':pd.Series(dtype='str'),
-#             'Container':pd.Series(dtype='str'), 
-#             'Water activity':pd.Series(dtype='str'),
-#             'Viability (CFU/g)':pd.Series(dtype='float')
-#             }
-#         )
-# =============================================================================
-
     empty_df = pd.DataFrame(
         {
             'FD sample ID':[''],
