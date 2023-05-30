@@ -2,7 +2,7 @@ import streamlit as st
 
 import pandas as pd
 import numpy as np
-#from utils import upload_dataset
+from utils import upload_dataset
 #from st_aggrid import AgGrid
 #from st_aggrid.grid_options_builder import GridOptionsBuilder
 
@@ -33,13 +33,6 @@ def data_cleaning(df):
     return df
 
 
-# TODO: mia use file as drag and drop
-df = pd.read_csv("/Users/miu/IFF_st/Data files/Pivot_SampleInfo_Hist.csv")
-df_v0 = data_cleaning(df)
-
-st.session_state.df = df_v0
- 
-
 def cast_df_columns(df):
     """
     The cast_df_columns function takes a dataframe as input and returns the same dataframe with
@@ -65,17 +58,62 @@ def cast_df_columns(df):
             ## This only works with new variables to add in, can't work if the values already exist 
             ## error msg: new categories must not include old categories: {'Klebsiella variicola', 'Kosakonia sacchari'}
             df[col] = df[col].astype("category").cat.add_categories(categories)
-            
+
             ## Turn the current values into selectable 
             #df[col] = df[col].astype("category")
 
     return df
 
+empty_df = pd.DataFrame(
+        {
+            'FD sample ID':[''],
+            'FD Run ID':[''],
+            'Strain':[''],
+            'EFT date':[None],
+            'Broth ID':[''],
+            'Fermentation Scale':[''],
+            'Ferm condition':[''],
+            'EFT (hr)':[np.nan],
+            'Broth titer (CFU/mL)':[np.nan],
+            'Broth age (day)':[np.nan],
+            'Pelletization date':[None],
+            'Cryo mix':[''],
+            'Ingredient 1':[''],
+            'Ingredient 2':[''],
+            'Ingredient 3':[''],
+            'Cryo mix addition rate':[np.nan],
+            'FD start date':[None],
+            'FD cycle recipe':[''],
+            'FD pressure (mTorr)':[''],
+            'FD run time (hr)':[np.nan],
+            'Primary ramp rate (C/min)':[np.nan],
+            'PA receive date':[''], # case: Dry in PA
+            'Dried appearance':[''],
+            'Container':[''],
+            'Water activity':[''],
+            'Viability (CFU/g)':[np.nan]
+            }
+        )
+
 def sample_info_app():
     st.title('WP4 FD Sample Information')
-
     st.subheader('New Sample Information Data Entry')
-    
+
+    if "df" not in st.session_state:
+        df = upload_dataset()
+        if st.button("save?"):
+            # breakpoint()
+            df_v0 = data_cleaning(df)
+            st.session_state.df = df_v0
+            st.experimental_rerun()
+        else:
+            st.stop()
+
+    # placeholder = st.empty()
+    # isclick = placeholder.button('delete this button')
+    # if isclick:
+    #     placeholder.empty()
+
     with st.expander('Instruction for entering new sample information'):
         st.write('''
                  * Add rows: scroll to the bottom-most row and click on the “+” sign in any cell
@@ -86,88 +124,49 @@ def sample_info_app():
                      * Strain, Fermentation Scale, Cryo mix, 
                      * Ingredient 1, Ingredient 2, Ingredient 3, Container
                  ''')
-    
-    empty_df = pd.DataFrame(
-        {
-            'FD sample ID':[''],
-            'FD Run ID':[''], 
-            'Strain':[''], 
-            'EFT date':[None], 
-            'Broth ID':[''],
-            'Fermentation Scale':[''], 
-            'Ferm condition':[''], 
-            'EFT (hr)':[np.nan],
-            'Broth titer (CFU/mL)':[np.nan], 
-            'Broth age (day)':[np.nan], 
-            'Pelletization date':[None],
-            'Cryo mix':[''], 
-            'Ingredient 1':[''], 
-            'Ingredient 2':[''], 
-            'Ingredient 3':[''],
-            'Cryo mix addition rate':[np.nan], 
-            'FD start date':[None],
-            'FD cycle recipe':[''], 
-            'FD pressure (mTorr)':[''], 
-            'FD run time (hr)':[np.nan],
-            'Primary ramp rate (C/min)':[np.nan], 
-            'PA receive date':[''], # case: Dry in PA
-            'Dried appearance':[''],
-            'Container':[''], 
-            'Water activity':[''],
-            'Viability (CFU/g)':[np.nan]
-            }
-        )
 
+    if "empty_df" not in st.session_state:
+        st.session_state["empty_df"] = cast_df_columns(empty_df.copy())
+    # =============================================================================
+    #     section1 = ['Strain','EFT date','Broth ID','Fermentation Scale','Ferm condition','EFT (hr)','Broth titer (CFU/mL)','Broth age (day)']
+    #     section2 = ['Pelletization date','Cryo mix','Ingredient 1','Ingredient 2','Ingredient 3','Cryo mix addition rate']
+    #     input1 = st.experimental_data_editor(input_df[section1], num_rows='dynamic')
+    #     input2 = st.experimental_data_editor(input_df[section2], num_rows='dynamic')
+    # =============================================================================
 
-    input_df = cast_df_columns(empty_df)
-    
-# =============================================================================
-#     section1 = ['Strain','EFT date','Broth ID','Fermentation Scale','Ferm condition','EFT (hr)','Broth titer (CFU/mL)','Broth age (day)']
-#     section2 = ['Pelletization date','Cryo mix','Ingredient 1','Ingredient 2','Ingredient 3','Cryo mix addition rate']
-#     input1 = st.experimental_data_editor(input_df[section1], num_rows='dynamic')
-#     input2 = st.experimental_data_editor(input_df[section2], num_rows='dynamic')
-# =============================================================================
-# =============================================================================
-#     t_input_df = input_df.T
-#     t_input_df.columns = ['Add new row here']
-# =============================================================================
-    input_df = st.experimental_data_editor(input_df, num_rows="dynamic")
-    
-    if st.button('Submit'):
-       st.subheader('Sample Information Compilation')
-       
-       # Process new dataframe
-       df_v = sample_info(input_df)
-       
-       # Load the historical dataset
-       #df = upload_dataset()
-       
-    
-       #df_v0 = data_cleaning(df)
-       df_v0 = sample_info(st.session_state.df)
-       
-       # Join the new inputs to historical dataset
-       df_v1 = df_v0.append(df_v, ignore_index=True)
-        
-# =============================================================================
-#         gb = GridOptionsBuilder.from_dataframe(df_v1)
-#         gb.configure_pagination()
-#         gb.configure_side_bar()
-#         gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, editable=True)
-#         gridOptions = gb.build()
-# 
-#         AgGrid(df_v1, gridOptions=gridOptions, enable_enterprise_modules=True)
-# =============================================================================
-       
-       st.write(df_v1)
-       st.session_state.df = df_v1
-       st.write(df_v1.shape)
-       st.download_button(
+    with st.form("my_form"):
+        input_df = st.experimental_data_editor(st.session_state["empty_df"], num_rows="dynamic")
+        submitted = st.form_submit_button("Submit")
+        if submitted:
+
+    # if st.button('Submit'):
+           st.subheader('Sample Information Compilation')
+           # Process new dataframe
+           df_v = sample_info(input_df)
+           df_v0 = sample_info(st.session_state.df)
+
+           # Join the new inputs to historical dataset
+           df_v1 = df_v0.append(df_v, ignore_index=True)
+
+    # =============================================================================
+    #         gb = GridOptionsBuilder.from_dataframe(df_v1)
+    #         gb.configure_pagination()
+    #         gb.configure_side_bar()
+    #         gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, editable=True)
+    #         gridOptions = gb.build()
+    #
+    #         AgGrid(df_v1, gridOptions=gridOptions, enable_enterprise_modules=True)
+    # =============================================================================
+           st.write(df_v1)
+           st.session_state.df = df_v1
+           st.write(df_v1.shape)
+
+    if len(st.session_state.df) >0:
+        st.download_button(
             label="Download Sample Info report as CSV",
-            data=df_v1.to_csv(),
+            data=st.session_state.df.to_csv(),
             file_name='sample_info.csv',
             mime='text/csv')
-
 
 
 def feature_eng(df):
@@ -179,34 +178,34 @@ def feature_eng(df):
     
     OUTPUT: a dataframe with features engineered for further analysis
     """
-    
+
     # Time features
-    time_feat = ['EFT date','Pelletization date','FD start date','PA receive date']
-    
+    time_feat = ['PA receive date', 'FD start date', 'EFT date','Pelletization date']
+
     for col in time_feat:
-        df[col] = pd.to_datetime(df[col],infer_datetime_format=True,format="%m/%d/%y",errors='coerce')
-        
+        df[col] = pd.to_datetime(df[col],infer_datetime_format=True, format="%m/%d/%y",errors='coerce')
+
     # If the user inputs 'Dry in PA', the command above turns the str to NaT. Thus, have to revert the input
     df['PA receive date'] = df['PA receive date'].replace({np.nan: 'Dry in PA'})
-    
-    
+
+
     # Numerical features
     num_feat = ['EFT (hr)','Broth titer (CFU/mL)','Broth age (day)','Cryo mix addition rate',
                 'FD run time (hr)','Primary ramp rate (C/min)','Viability (CFU/g)']
-        
+
     for col in num_feat:
         df[col] = df[col].astype(float)
-        
-        
+
+
     # Coefficient    
     cryo_coef = {
         'PVT70%': 0.285,
         'DSR': 0.342,
         'SKP': 0.380
     }
-    
+
     df['Cryo mix Coef'] = df['Cryo mix'].map(cryo_coef)
-    
+
     return df
 
 
