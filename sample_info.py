@@ -3,19 +3,22 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from utils import upload_dataset
-#from st_aggrid import AgGrid
-#from st_aggrid.grid_options_builder import GridOptionsBuilder
 
 
 st.set_page_config(layout="wide")
 
+# Time features
+time_feats = ['PA receive date', 'FD start date', 'EFT date','Pelletization date']
+
+
 def data_cleaning(df):
     """
-    This function cleans up the historical dataset resulting in the desired format
+    The data_cleaning function cleans up the historical dataset resulting in the desired format. 
+    This function removes untracked features, formats the date time and NaN values 
     
-    INPUT: a dataframe containing current data
+    INPUT: a dataframe containing historical data
     
-    OUTPUT: an engineered dataframe with features selected for further analysis
+    OUTPUT: a clean dataframe 
     """
     
     df.columns = [column.strip() for column in df.columns]
@@ -24,8 +27,16 @@ def data_cleaning(df):
     except:
         pass
     
+    
     df.dropna(subset=['FD Run ID'], inplace=True)
     df['FD run time (hr)'] = df['FD run time (hr)'].apply(lambda x:float(x.split()[0]))
+    
+    
+    for col in time_feats:
+        df[col] = pd.to_datetime(df[col],infer_datetime_format=True, format="%m/%d/%y",errors='coerce')
+    # If the values were 'Dry in PA', the command above turns the str to NaT. Thus, have to revert the input
+    df['PA receive date'] = df['PA receive date'].replace({np.nan: 'Dry in PA'})
+    
     
     df['Viability (CFU/g)'] = df['Viability (CFU/g)'].replace(['#DIV/0!','n/m'], np.NaN)
     df['Viability (CFU/g)'] = df['Viability (CFU/g)'].astype(float)
@@ -46,7 +57,7 @@ def cast_df_columns(df):
     mapping_category_to_col = {
         'Strain': ['Klebsiella variicola', 'Kosakonia sacchari'],
         'Fermentation Scale': ['14L', '150K'],
-        'Cryo mix': ['DSR', 'PVT70%', 'SKP'],
+        'Cryo mix': ['DSR', 'PVT40%', 'PVT70%', 'SKP'],
         'Ingredient 1': ['40% Sucrose', '45.5% Sucrose'],
         'Ingredient 2': ['8% KH2PO4', '10% Maltodextrin', '22.75% Inulin'],
         'Ingredient 3': ['10.2% K2HPO4', '0.5% MgSO4'],
@@ -55,8 +66,7 @@ def cast_df_columns(df):
         
     for col, categories in mapping_category_to_col.items():
         if col in df.columns:
-            ## This only works with new variables to add in, can't work if the values already exist 
-            ## error msg: new categories must not include old categories: {'Klebsiella variicola', 'Kosakonia sacchari'}
+            # This only works with new variables to add in, can't work if the values already exist 
             df[col] = df[col].astype("category").cat.add_categories(categories)
 
             ## Turn the current values into selectable 
@@ -98,23 +108,21 @@ empty_df = pd.DataFrame(
 def sample_info_app():
     st.title('WP4 FD Sample Information')
     st.subheader('New Sample Information Data Entry')
-
+    
+    st.info('Developer use for testing - Upload historical data')
     if "df" not in st.session_state:
         df = upload_dataset()
-        if st.button("save?"):
+        if st.button("Save?"):
             # breakpoint()
             df_v0 = data_cleaning(df)
+            df_v0 = feature_eng(df_v0)
             st.session_state.df = df_v0
             st.experimental_rerun()
         else:
             st.stop()
-
-    # placeholder = st.empty()
-    # isclick = placeholder.button('delete this button')
-    # if isclick:
-    #     placeholder.empty()
-
-    with st.expander('Instruction for entering new sample information'):
+    
+    
+    with st.expander('IMPORTANT: Instruction for entering new sample information'):
         st.write('''
                  * Add rows: scroll to the bottom-most row and click on the “+” sign in any cell
                  * Delete rows: select one or more rows and press the `delete` key on your keyboard 
@@ -124,29 +132,25 @@ def sample_info_app():
                      * Strain, Fermentation Scale, Cryo mix, 
                      * Ingredient 1, Ingredient 2, Ingredient 3, Container
                  ''')
+    
 
     if "empty_df" not in st.session_state:
         st.session_state["empty_df"] = cast_df_columns(empty_df.copy())
-    # =============================================================================
-    #     section1 = ['Strain','EFT date','Broth ID','Fermentation Scale','Ferm condition','EFT (hr)','Broth titer (CFU/mL)','Broth age (day)']
-    #     section2 = ['Pelletization date','Cryo mix','Ingredient 1','Ingredient 2','Ingredient 3','Cryo mix addition rate']
-    #     input1 = st.experimental_data_editor(input_df[section1], num_rows='dynamic')
-    #     input2 = st.experimental_data_editor(input_df[section2], num_rows='dynamic')
-    # =============================================================================
 
     with st.form("my_form"):
         input_df = st.experimental_data_editor(st.session_state["empty_df"], num_rows="dynamic")
+        
         submitted = st.form_submit_button("Submit")
         if submitted:
-
-    # if st.button('Submit'):
            st.subheader('Sample Information Compilation')
+           
            # Process new dataframe
            df_v = sample_info(input_df)
            df_v0 = sample_info(st.session_state.df)
 
            # Join the new inputs to historical dataset
            df_v1 = df_v0.append(df_v, ignore_index=True)
+           df_v1 = df_v1.drop_duplicates(subset=['FD sample ID', "FD Run ID", "Strain", "EFT date"], keep='last', ignore_index=True)
 
     # =============================================================================
     #         gb = GridOptionsBuilder.from_dataframe(df_v1)
@@ -167,8 +171,17 @@ def sample_info_app():
             data=st.session_state.df.to_csv(),
             file_name='sample_info.csv',
             mime='text/csv')
+        
 
-
+def convert_time_featsures(i):
+    if i == '':
+        return None
+    try:
+        return pd.to_datetime(i, infer_datetime_format=True, format="%m/%d/%y")
+    except ValueError:
+        return i
+    
+    
 def feature_eng(df):
     """
     This function format datetime and numerical features in the desirable format; 
@@ -178,16 +191,6 @@ def feature_eng(df):
     
     OUTPUT: a dataframe with features engineered for further analysis
     """
-
-    # Time features
-    time_feat = ['PA receive date', 'FD start date', 'EFT date','Pelletization date']
-
-    for col in time_feat:
-        df[col] = pd.to_datetime(df[col],infer_datetime_format=True, format="%m/%d/%y",errors='coerce')
-
-    # If the user inputs 'Dry in PA', the command above turns the str to NaT. Thus, have to revert the input
-    df['PA receive date'] = df['PA receive date'].replace({np.nan: 'Dry in PA'})
-
 
     # Numerical features
     num_feat = ['EFT (hr)','Broth titer (CFU/mL)','Broth age (day)','Cryo mix addition rate',
@@ -203,7 +206,6 @@ def feature_eng(df):
         'DSR': 0.342,
         'SKP': 0.380
     }
-
     df['Cryo mix Coef'] = df['Cryo mix'].map(cryo_coef)
 
     return df
@@ -211,7 +213,7 @@ def feature_eng(df):
 
 def cal_yield(row):
     """
-    Calculate broth's yield
+    Calculate the fermentation broth's yield
     """
     
     if row.isna().any():
@@ -233,15 +235,18 @@ def log_loss(x):
     
 def sample_info(df):
     """
-    This function takes in a dataframe containing user inputs, then formats the datetime, numerical and cateogrical features.
+    The sample_info function takes in a dataframe containing user inputs, then formats the datetime, numerical and cateogrical features.
     This function performs calcualtion on the material's yield and log loss. 
     It returns a dataframe with sample's information entered by the user and according calcualted values
     
     INPUT: a dataframe with user inputs
     
-    OUTPUT: a dataframe with sample's information and analysis data
+    OUTPUT: a dataframe with sample's information and analysis 
     """
     
+    for col in time_feats:
+        df[col] = df[col].apply(convert_time_featsures)
+        
     df = feature_eng(df)
     
     to_cal = df[['Broth titer (CFU/mL)','Viability (CFU/g)','Cryo mix Coef']]
