@@ -4,25 +4,27 @@ from boost import boost_app
 from pivot_in_pack import pivot_in_pack_app
 from pivot_on_seed import pivot_on_seed_app
 #from sample_info import sample_info_app
+from home_page import homepage
 
-import pandas as pd
 
 import warnings
 warnings.filterwarnings("ignore")
 
-if 'pivot_df' not in st.session_state:
-    st.session_state['pivot_df'] = pd.DataFrame()
+st.set_page_config(layout="wide")
 
 # DASHBOARD
-add_sidebar = st.sidebar.selectbox('Option', ('Sample Information','Pivot In-pack','Pivot On-seed','Boost'))
-st.warning('EXPERIMENTAL AND DEVELOPING STAGE')                                 
+add_sidebar = st.sidebar.selectbox('Option', ('Home','Sample Information','Pivot In-pack',
+                                              'Pivot On-seed','Boost'))        
+st.warning('EXPERIMENTAL AND DEVELOPING STAGE')                         
 
 if __name__ == '__main__':
-    if add_sidebar == 'Pivot In-pack':
+    if add_sidebar == 'Home':
+        homepage()
+    elif add_sidebar == 'Pivot In-pack':
         pivot_in_pack_app()
     elif add_sidebar == 'Pivot On-seed':
         pivot_on_seed_app()
     elif add_sidebar == 'Boost':
         boost_app()
-    #elif add_sidebar == 'Sample Information':
-        #sample_info_app()
+    # elif add_sidebar == 'Sample Information':
+    #     sample_info_app()
