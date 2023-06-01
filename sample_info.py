@@ -5,8 +5,6 @@ import numpy as np
 from utils import upload_dataset
 
 
-st.set_page_config(layout="wide")
-
 # Time features
 time_feats = ['PA receive date', 'FD start date', 'EFT date','Pelletization date']
 
@@ -74,6 +72,7 @@ def cast_df_columns(df):
 
     return df
 
+
 empty_df = pd.DataFrame(
         {
             'FD sample ID':[''],
@@ -104,6 +103,7 @@ empty_df = pd.DataFrame(
             'Viability (CFU/g)':[np.nan]
             }
         )
+
 
 def sample_info_app():
     st.title('WP4 FD Sample Information')
@@ -173,7 +173,10 @@ def sample_info_app():
             mime='text/csv')
         
 
-def convert_time_featsures(i):
+def convert_time_features(i):
+    """
+    The convert_time_features function
+    """
     if i == '':
         return None
     try:
@@ -245,7 +248,7 @@ def sample_info(df):
     """
     
     for col in time_feats:
-        df[col] = df[col].apply(convert_time_featsures)
+        df[col] = df[col].apply(convert_time_features)
         
     df = feature_eng(df)
     
