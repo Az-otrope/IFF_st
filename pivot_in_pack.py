@@ -12,10 +12,36 @@ import numpy as np
 from utils import upload_dataset, progress_bar
 
 
+def cast_df_columns(df):
+    """
+    The cast_df_columns function takes a dataframe as input and returns the same dataframe with
+    the columns that are categorical variables cast to pandas.Categorical dtype. The function also adds
+    categories to each column that were not present in the original dataset, but are present in other datasets.
+
+    :param df: Pass in the dataframe to be modified
+    :return: The dataframe with the columns casted as categories
+    """
+    
+    mapping_category_to_col = {
+        'Storage form':['Pellet', 'Unbulked powder', 'Bulked powder, pre-dried bulking', 
+                        'Bulked powder, w/o SiO2', 'Bulked powder, pre-dried bulking w/o SiO2', 'Bulked powder'],
+        'Container': ['Mylar'],
+        'Bulking': ['PVT', 'SKP', 'Tryptone'],
+        'Desiccant': ['2%CaCl2', '5%SIO2', '10%CaCl2', '10%SIO2', '25%SIO2',
+                      '5%TMC', '25%TMC', '10%TMC', '5%TMC+2%CaCl2']
+    }
+        
+    for col, categories in mapping_category_to_col.items():
+        if col in df.columns:
+            df[col] = df[col].astype("category").cat.add_categories(categories)
+
+    return df
+
+
 def pivot_in_pack_app():
     st.title('Pivot In-pack Data Dashboard')
     
-    st.subheader('New Sample Information Data Entry')
+    st.subheader('New In-pack Sample Information Data Entry')
     
     with st.expander('Instruction for entering new sample information'):
         st.write('''
@@ -25,17 +51,33 @@ def pivot_in_pack_app():
     
     empty_df = pd.DataFrame(
         {
-            'FD Run ID':pd.Series(dtype='str'), 
-            'Storage form':pd.Series(dtype='str'), 
-            'Temperature (C)':pd.Series(dtype='int'), 
-            'Desiccant':pd.Series(dtype='str')
+            'FD sample ID':[''],
+            'FD Run ID':[''], 
+            'Storage form':[''],
+            'Container':[''],
+            'Temperature (C)':[np.nan],
+            'Bulking':[''],
+            'Desiccant':['']
             }
         )
     
-    input_df = st.experimental_data_editor(empty_df, num_rows='dynamic')
-    
-    if st.button('Submit'):
-        pass
+    if 'empty_df' not in st.session_state:
+        st.session_state['empty_df'] = cast_df_columns(empty_df.copy())
+        
+    with st.form('my_form'):
+        input_df = st.experimental_data_editor(st.session_state['empty_df'], num_rows='dynamic')
+        
+        submitted = st.form_submit_button("Submit")
+        if submitted:
+            st.subheader('New In-pack Samples')
+            
+            df_v0 = st.session_state['empty_df']
+            df_v1 = df_v0.append(input_df, ignore_index=True)
+            df_v1 = df_v1.drop_duplicates(subset=['FD sample ID', 'FD Run ID', 'Storage form', 'Container'], keep='last', ignore_index=True)
+
+            st.write(df_v1)
+            st.session_state.empty_df = df_v1
+            st.write(input_df.shape)
     
     
     st.subheader('Experimental Data')
