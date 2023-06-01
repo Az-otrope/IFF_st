@@ -23,4 +23,4 @@ def homepage():
                 ''')
                 
     st.info('Contact Nguyen @nguyen.pham@iff for feedback and questions')
-    st.balloons()
+    st.snow()
