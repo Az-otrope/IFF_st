@@ -3,3 +3,5 @@ numpy==1.24.2
 streamlit==1.21.0
 altair==4.2.2
 streamlit-aggrid==0.3.4.post3
+scikit-learn==1.2.2
+statsmodels==0.14.0
