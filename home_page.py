@@ -22,5 +22,5 @@ def homepage():
             
                 ''')
                 
-    st.info('Contact Nguyen @nguyen.pham@iff for feedback and questions')
+    st.info('Contact Nguyen at nguyen.pham@iff for feedback and questions')
     st.snow()

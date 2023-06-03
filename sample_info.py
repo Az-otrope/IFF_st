@@ -194,7 +194,10 @@ def feature_eng(df):
     
     OUTPUT: a dataframe with features engineered for further analysis
     """
-
+    
+    for col in df:
+        df[col] = df[col].apply(lambda x:x.strip())
+        
     # Numerical features
     num_feat = ['EFT (hr)','Broth titer (CFU/mL)','Broth age (day)','Cryo mix addition rate',
                 'FD run time (hr)','Primary ramp rate (C/min)','Viability (CFU/g)']
@@ -249,6 +252,7 @@ def sample_info(df):
     
     for col in time_feats:
         df[col] = df[col].apply(convert_time_features)
+        
         
     df = feature_eng(df)
     
