@@ -9,7 +9,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-from utils import upload_dataset, progress_bar
+from utils import upload_dataset, progress_bar, remove_spaces
 
 
 def cast_df_columns(df):
@@ -49,6 +49,7 @@ def pivot_in_pack_app():
                  * Delete rows: select one or more rows and press the `delete` key on your keyboard
                  ''')
     
+
     empty_df = pd.DataFrame(
         {
             'FD sample ID':[''],
@@ -72,15 +73,17 @@ def pivot_in_pack_app():
             st.subheader('New In-pack Samples')
             
             df_v0 = st.session_state['empty_df']
+            
             df_v1 = df_v0.append(input_df, ignore_index=True)
             df_v1 = df_v1.drop_duplicates(subset=['FD sample ID', 'FD Run ID', 'Storage form', 'Container'], keep='last', ignore_index=True)
-
+            df_v1 = remove_spaces(df_v1)
+            
             st.write(df_v1)
             st.session_state.empty_df = df_v1
             st.write(input_df.shape)
     
     
-    st.subheader('Experimental Data')
+    st.subheader('Experimental CFU Plating Data')
     
     df = upload_dataset()    
     if len(df) > 0:
@@ -118,6 +121,10 @@ def pivot_in_pack_app():
 
 
 def feature_eng(df):
+    """
+    The feature_eng function creates 2 new timedelta features in days and weeks. 
+    """
+    
     df[['T0', 'Date']] = df[['T0', 'Date']].apply(pd.to_datetime, format="%m/%d/%y")
     df['Time point (day)'] = (df['Date'] - df['T0']).apply(lambda x: x.days)
     
@@ -140,6 +147,9 @@ def data_cleaning(df):
          'T0','Date','CFU/mL','CFU/g','CV','Water Activity'
         ]
     ]
+    
+    df = remove_spaces(df)
+    
     for idx, row in df.iterrows():
         try:
             df.loc[idx, "CV"] = float(row['CV'].split("%")[0])
@@ -157,7 +167,7 @@ def data_cleaning(df):
 
 def pivot_in_pack(df):
     df = data_cleaning(df)
-    df = feature_eng(df)
+    raw_cfu = feature_eng(df)
 
     pivot_rawcfu = df.pivot(index='FD Run ID', columns='Time point (week)', values=['CFU/mL', 'CFU/g', 'Water Activity'])
     pivot_rawcfu.columns = [f"W{week}_{scale}" for scale, week in pivot_rawcfu.columns.to_list()]
@@ -168,6 +178,6 @@ def pivot_in_pack(df):
     cfu = cfu.drop_duplicates(subset='FD Run ID').reset_index(drop=True)
     
     # join the pivot df with the original info
-    cleaned_cfu = pd.merge(cfu, pivot_rawcfu, on='FD Run ID')
+    clean_cfu = pd.merge(cfu, pivot_rawcfu, on='FD Run ID')
 
-    return df, cleaned_cfu
+    return raw_cfu, clean_cfu

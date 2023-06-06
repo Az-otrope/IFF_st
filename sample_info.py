@@ -2,7 +2,7 @@ import streamlit as st
 
 import pandas as pd
 import numpy as np
-from utils import upload_dataset
+from utils import upload_dataset, remove_spaces
 
 
 # Time features
@@ -20,6 +20,8 @@ def data_cleaning(df):
     """
     
     df.columns = [column.strip() for column in df.columns]
+    df = remove_spaces(df)
+    
     try:
         df.drop(['Storage tracking','Seed treatment','Ingredient4','Yield (%)','Log loss','Note'], axis=1, inplace=True)
     except:
@@ -32,7 +34,7 @@ def data_cleaning(df):
     
     for col in time_feats:
         df[col] = pd.to_datetime(df[col],infer_datetime_format=True, format="%m/%d/%y",errors='coerce')
-    # If the values were 'Dry in PA', the command above turns the str to NaT. Thus, have to revert the input
+    # If the values were 'Dry in PA', the command above turns str to NaT. Thus, have to revert the input
     df['PA receive date'] = df['PA receive date'].replace({np.nan: 'Dry in PA'})
     
     
@@ -149,7 +151,8 @@ def sample_info_app():
            df_v0 = sample_info(st.session_state.df)
 
            # Join the new inputs to historical dataset
-           df_v1 = df_v0.append(df_v, ignore_index=True)
+           df_v1 = pd.concat([df_v0, df_v], ignore_index=True)
+           # df_v1 = df_v0.append(df_v, ignore_index=True)
            df_v1 = df_v1.drop_duplicates(subset=['FD sample ID', "FD Run ID", "Strain", "EFT date"], keep='last', ignore_index=True)
 
     # =============================================================================
@@ -175,7 +178,7 @@ def sample_info_app():
 
 def convert_time_features(i):
     """
-    The convert_time_features function
+    The convert_time_features function standardizes time inputs, keeps text inputs, and passes None inputs
     """
     if i == '':
         return None
@@ -187,16 +190,15 @@ def convert_time_features(i):
     
 def feature_eng(df):
     """
-    This function format datetime and numerical features in the desirable format; 
-    then create a column "Cryo mix Coef" containing a coefficient associates to each cryo-mix type. 
+    This function formats datetime and numerical features in the desirable format; 
+    then creates a column "Cryo mix Coef" containing a coefficient associates to each cryo-mix type. 
     
     INPUT: a dataframe with user inputs
     
     OUTPUT: a dataframe with features engineered for further analysis
     """
     
-    for col in df:
-        df[col] = df[col].apply(lambda x:x.strip())
+    df = remove_spaces(df)
         
     # Numerical features
     num_feat = ['EFT (hr)','Broth titer (CFU/mL)','Broth age (day)','Cryo mix addition rate',
@@ -204,7 +206,6 @@ def feature_eng(df):
 
     for col in num_feat:
         df[col] = df[col].astype(float)
-
 
     # Coefficient    
     cryo_coef = {
@@ -252,7 +253,6 @@ def sample_info(df):
     
     for col in time_feats:
         df[col] = df[col].apply(convert_time_features)
-        
         
     df = feature_eng(df)
     

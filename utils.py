@@ -6,6 +6,7 @@ Created on Mon May  1 00:28:31 2023
 @author: miu
 """
 import pandas as pd
+import numpy as np
 import streamlit as st
 import time
 
@@ -41,3 +42,30 @@ def progress_bar():
         progress_bar.progress(percent_complete+1)
     
     st.write("File uploaded successfully")
+    
+
+# =============================================================================
+# def convert_time_features(i):
+#     """
+#     The convert_time_features function standardizes time inputs, keeps text inputs, and passes None inputs
+#     """
+#     if i == '':
+#         return None
+#     try:
+#         return pd.to_datetime(i, infer_datetime_format=True, format="%m/%d/%y")
+#     except ValueError:
+#         return i
+# =============================================================================
+    
+    
+def remove_spaces(df):
+    """
+    This function removes the spaces before and after a string. 
+    The function will pass columns with timestamp and numerical datatypes
+    """
+    
+    for col in df:
+        if df[col].dtype == np.dtype('object'):
+            
+            df[col] = df[col].apply(lambda x:x.strip() if type(x) == "str" else x)
+    return df
