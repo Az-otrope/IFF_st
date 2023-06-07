@@ -61,7 +61,7 @@ def progress_bar():
 def remove_spaces(df):
     """
     This function removes the spaces before and after a string. 
-    The function will pass columns with timestamp and numerical datatypes
+    The function will pass columns with timestamp and numerical datatype
     """
     
     for col in df:

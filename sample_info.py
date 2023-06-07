@@ -125,14 +125,15 @@ def sample_info_app():
     
     
     with st.expander('IMPORTANT: Instruction for entering new sample information'):
-        st.write('''
-                 * Add rows: scroll to the bottom-most row and click on the “+” sign in any cell
-                 * Delete rows: select one or more rows and press the `delete` key on your keyboard 
+        st.write(''' 
                  * Enter the date in `MM/DD/YY` format. 
                  * Enter numerical values in full (i.e. NOT scientific)
                  * Dropdown features: 
                      * Strain, Fermentation Scale, Cryo mix, 
                      * Ingredient 1, Ingredient 2, Ingredient 3, Container
+                     
+                 * Add rows: scroll to the bottom-most row and click on the “+” sign in any cell
+                 * Delete rows: select one or more rows and press the `delete` key on your keyboard
                  ''')
     
 
@@ -154,8 +155,9 @@ def sample_info_app():
            df_v1 = pd.concat([df_v0, df_v], ignore_index=True)
            # df_v1 = df_v0.append(df_v, ignore_index=True)
            df_v1 = df_v1.drop_duplicates(subset=['FD sample ID', "FD Run ID", "Strain", "EFT date"], keep='last', ignore_index=True)
+           df_v1.dropna(subset=['FD Run ID'], inplace=True, ignore_index=True)
 
-    # =============================================================================
+           # =============================================================================
     #         gb = GridOptionsBuilder.from_dataframe(df_v1)
     #         gb.configure_pagination()
     #         gb.configure_side_bar()

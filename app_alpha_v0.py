@@ -26,9 +26,8 @@ authenticator = stauth.Authenticate(
 name, authentication_status, username = authenticator.login('Login', 'main')
 if st.session_state["authentication_status"]:
     authenticator.logout('Logout', 'main')
-    st.title('Some content')
     # DASHBOARD
-    add_sidebar = st.sidebar.selectbox('Option', ('Home', 'Pivot Sample Information','Pivot In-pack',
+    add_sidebar = st.sidebar.selectbox('Option', ('Home','Pivot Sample Information','Pivot In-pack',
                                                   'Pivot On-seed','Boost Sample Information','Boost'))
     if __name__ == '__main__':
         if add_sidebar == 'Home':
@@ -41,7 +40,7 @@ if st.session_state["authentication_status"]:
             pivot_on_seed_app()
         elif add_sidebar == 'Boost':
             boost_app() 
-        elif add_sidebar == 'Boost Sample Inormation':
+        elif add_sidebar == 'Boost Sample Information':
             pass
 elif st.session_state["authentication_status"] == False:
     st.error('Username/password is incorrect')
