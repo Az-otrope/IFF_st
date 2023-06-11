@@ -15,7 +15,6 @@ def data_cleaning(df):
     This function removes untracked features, formats the date time and NaN values 
     
     INPUT: a dataframe containing historical data
-    
     OUTPUT: a clean dataframe 
     """
     
@@ -196,7 +195,6 @@ def feature_eng(df):
     then creates a column "Cryo mix Coef" containing a coefficient associates to each cryo-mix type. 
     
     INPUT: a dataframe with user inputs
-    
     OUTPUT: a dataframe with features engineered for further analysis
     """
     
@@ -249,8 +247,7 @@ def sample_info(df):
     It returns a dataframe with sample's information entered by the user and according calcualted values
     
     INPUT: a dataframe with user inputs
-    
-    OUTPUT: a dataframe with sample's information and analysis 
+    OUTPUT: a dataframe with sample's information and broth's yield-loss
     """
     
     for col in time_feats:

@@ -5,15 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0f2fda42-c411-42a3-b12e-0688ca81cb2a" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Data files/PIVOT Sample Master List 2023_10May23.xlsm" beforeDir="false" afterPath="$PROJECT_DIR$/Data files/PIVOT Sample Master List 2023_10May23.xlsm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data files/~$PIVOT Sample Master List 2023_10May23.xlsm" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/app_alpha_v0.py" beforeDir="false" afterPath="$PROJECT_DIR$/app_alpha_v0.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/notebook/.ipynb_checkpoints/Pivot_InPack-checkpoint.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebook/.ipynb_checkpoints/Pivot_InPack-checkpoint.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/notebook/Pivot_InPack.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebook/Pivot_InPack.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pivot_in_pack.py" beforeDir="false" afterPath="$PROJECT_DIR$/pivot_in_pack.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.ini" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.ini" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sample_info.py" beforeDir="false" afterPath="$PROJECT_DIR$/sample_info.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
     </list>
@@ -45,7 +44,7 @@
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "settings.editor.selected.configurable": "Errors",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -58,7 +57,7 @@
       <option name="presentableId" value="Default" />
       <updated>1684908043648</updated>
       <workItem from="1684908044731" duration="4636000" />
-      <workItem from="1686036160704" duration="1467000" />
+      <workItem from="1686036160704" duration="16511000" />
     </task>
     <servers />
   </component>

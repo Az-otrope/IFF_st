@@ -15,8 +15,7 @@ def upload_dataset() -> pd.DataFrame:
     """
     Let the user upload a dataset as CSV
     
-    INPUT: a .csv file 
-    
+    INPUT: a .csv file
     OUTPUT: return dataframe with relevant input and calculated information
     """
     
@@ -61,7 +60,7 @@ def progress_bar():
 def remove_spaces(df):
     """
     This function removes the spaces before and after a string. 
-    The function will pass columns with timestamp and numerical datatype
+    The function will skip columns with timestamp, numerical datatype and NaN
     """
     
     for col in df:

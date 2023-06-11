@@ -13,6 +13,8 @@ from home_page import homepage
 
 warnings.filterwarnings("ignore")
 
+st.set_page_config(layout="wide")
+
 with open('aut.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
