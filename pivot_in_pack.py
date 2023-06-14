@@ -11,7 +11,10 @@ import numpy as np
 import statsmodels.api as sm
 
 from utils import upload_dataset, progress_bar, remove_spaces
+# TODO: how to import the info_merge df from sample_info?
+#import sample_info
 
+#info_df = sample_info.info_merge
 
 def cast_df_columns(df):
     """
@@ -24,8 +27,8 @@ def cast_df_columns(df):
     """
     
     mapping_category_to_col = {
-        'Storage form':['Pellet', 'Unbulked powder', 'Bulked powder, pre-dried bulking', 
-                        'Bulked powder, w/o SiO2', 'Bulked powder, pre-dried bulking w/o SiO2', 'Bulked powder'],
+        'Storage form': ['Pellet', 'Unbulked powder', 'Bulked powder, pre-dried bulking', 'Bulked powder, w/o SiO2',
+                         'Bulked powder, pre-dried bulking w/o SiO2', 'Bulked powder'],
         'Container': ['Mylar'],
         'Bulking': ['PVT', 'SKP', 'Tryptone'],
         'Desiccant': ['2%CaCl2', '5%SIO2', '10%CaCl2', '10%SIO2', '25%SIO2',
@@ -58,13 +61,13 @@ def pivot_in_pack_app():
 
     empty_df = pd.DataFrame(
         {
-            'FD sample ID':[''],
-            'FD Run ID':[''], 
-            'Storage form':[''],
-            'Container':[''],
-            'Temperature (C)':[np.nan],
-            'Bulking':[''],
-            'Desiccant':['']
+            'FD sample ID': [''],
+            'FD Run ID': [''],
+            'Storage form': [''],
+            'Container': [''],
+            'Temperature (C)': [np.nan],
+            'Bulking': [''],
+            'Desiccant': ['']
             }
         )
     
@@ -82,13 +85,13 @@ def pivot_in_pack_app():
             df_v = st.session_state['df']
             df_v0 = remove_spaces(input_df)
 
-            df_v1 = pd.concat([df_v, df_v0], ignore_index=True)
-            df_v1 = df_v1.drop_duplicates(subset=['FD sample ID', 'FD Run ID', 'Storage form', 'Container'], keep='last', ignore_index=True)
-            df_v1.dropna(subset=['FD sample ID', 'FD Run ID'], inplace=True, ignore_index=True)
+            user_input_df = pd.concat([df_v, df_v0], ignore_index=True)
+            user_input_df = user_input_df.drop_duplicates(subset=['FD sample ID', 'FD Run ID', 'Storage form', 'Container'], keep='last', ignore_index=True)
+            user_input_df.dropna(subset=['FD sample ID', 'FD Run ID'], inplace=True, ignore_index=True)
 
-            st.write(df_v1)
-            st.session_state.df = df_v1
-            st.write(input_df.shape)
+            st.write(user_input_df)
+            st.session_state.df = user_input_df
+            st.write(user_input_df.shape)
 
 
     st.subheader('Experimental CFU Plating Data')
@@ -97,7 +100,7 @@ def pivot_in_pack_app():
     if len(df) > 0:
         progress_bar()
         
-        df_v0, df_v1 = pivot_in_pack(df)
+        df_v0, df_v1 = pivot_in_pack(df) # raw, decay_df
         st.session_state['pivot_df'] = df_v1.to_dict("records")
         if len(df_v1) > 0:
             st.subheader('Raw CFU Plating Data')
@@ -105,8 +108,15 @@ def pivot_in_pack_app():
             st.write(df_v0.shape)
 
             st.subheader('Processed CFU Plating Data')
-            # Join with input_df HERE
-            
+
+            # TODO: Join with input_df HERE
+            # temp1 = pd.merge(left=real_input_df, right=decay_df.drop(['T0', 'Date'], axis=1),
+            #                  on='FD Run ID', how='left')
+            #
+            # temp2 = pd.merge(left=temp1, right=info_df, on=['FD sample ID'], how='left')
+            #
+            # final_df = pd.merge(temp2, info_df, on='FD sample ID')
+
             df_v1 = st.experimental_data_editor(df_v1, num_rows="dynamic")
             st.write(df_v1.shape)
             st.download_button(
@@ -174,20 +184,20 @@ def feature_eng(df):
 
 def decay_rate(df):
     """
-        The decay_rate function calculates the rate at which the material's concentration (in Log10_CFU) decay over time.
-        The function takes in time (day) as the independent variable (X) and Log10(CFU) as the dependent variable (y).
-        A linear regression model is instantiated to calculate the slope, r-squared, and the 95% confidence interval (CI) of the slope.
-        The model will skip entries having fewer than 2 datapoints due to avoid overfitting and bias.
+    The decay_rate function calculates the rate at which the material's concentration (in Log10_CFU) decay over time.
+    The function takes in time (day) as the independent variable (X) and Log10(CFU) as the dependent variable (y).
+    A linear regression model calculates the slope, r-squared, and the 95% confidence interval (CI) of the slope.
+    The model will skip entries having fewer than 2 datapoints due to avoid overfitting and bias.
 
-        INPUT: a dataframe containing raw plating CFU data (wide format)
-            - X (independent variable): time (day) - int64 or float64
-            - y (dependent variable): Log10(CFU) - float64
+    INPUT: a dataframe containing raw plating CFU data (wide format)
+        - X (independent variable): time (day) - int64 or float64
+        - y (dependent variable): Log10(CFU) - float64
 
-        OUTPUT: a dataframe containing the samples information, their CFU values at each timepoint, the decay rate over time,
-            the R-squared of the linear fit equation, the lower and upper values of the 95% CI of the decay rate.
-            - decay_rate: slope of the linear fit equation (m)
-            - r-squared: coefficient of determination
-            - ci_slope: [lower,upper] values of the slope's 95% CI
+    OUTPUT: a dataframe containing the samples information, the CFU values at each timepoint, the decay rate over time,
+        the R-squared of the linear fit equation, the lower and upper values of the 95% CI of the decay rate.
+        - decay_rate: slope of the linear fit equation (m)
+        - r-squared: coefficient of determination
+        - ci_slope: [lower,upper] values of the slope's 95% CI
     """
     df['LogCFU'] = np.log10(df['CFU/g'])
 
@@ -229,8 +239,8 @@ def pivot_in_pack(df):
     pivot_rawcfu.columns = [f"W{week}_{scale}" for scale, week in pivot_rawcfu.columns.to_list()]
     
     # remove cols that cause duplicated samples
-    cfu = df.drop(['Sample Description','Storage form','Temperature-Celsius',
-                   'CFU/mL','CFU/g','CV (%)','Water Activity','Day','Week'], axis=1)
+    cfu = df.drop(['Sample Description', 'Storage form', 'Temperature-Celsius',
+                   'CFU/mL', 'CFU/g', 'CV (%)', 'Water Activity', 'Day', 'Week'], axis=1)
     cfu = cfu.drop_duplicates(subset='FD Run ID').reset_index(drop=True)
     
     # join the pivot df with the original info -> wide format df
@@ -246,3 +256,5 @@ def pivot_in_pack(df):
     decay_df = decay_df.drop_duplicates()
 
     return raw_cfu, decay_df
+
+# TODO: join the 3 dataframes: info_merge, user_input_df and decay_df
