@@ -156,7 +156,7 @@ def sample_info_app():
            # df_v1 = df_v0.append(df_v, ignore_index=True)
            df_v1 = df_v1.drop_duplicates(subset=['FD sample ID', "FD Run ID", "Strain", "EFT date"],
                                          keep='last', ignore_index=True)
-           df_v1.dropna(subset=['FD Run ID'], inplace=True, ignore_index=True)
+           df_v1.dropna(subset=['FD Run ID'], inplace=True)
 
     # =============================================================================
     #         gb = GridOptionsBuilder.from_dataframe(df_v1)

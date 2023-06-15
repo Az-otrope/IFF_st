@@ -87,7 +87,7 @@ def pivot_in_pack_app():
 
             user_input_df = pd.concat([df_v, df_v0], ignore_index=True)
             user_input_df = user_input_df.drop_duplicates(subset=['FD sample ID', 'FD Run ID', 'Storage form', 'Container'], keep='last', ignore_index=True)
-            user_input_df.dropna(subset=['FD sample ID', 'FD Run ID'], inplace=True, ignore_index=True)
+            user_input_df.dropna(subset=['FD sample ID', 'FD Run ID'], inplace=True)
 
             st.write(user_input_df)
             st.session_state.df = user_input_df
