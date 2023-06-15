@@ -132,7 +132,7 @@ def pivot_in_pack_app():
             df_v1['Date'].max().date(),
             value=(df_v1['T0'].min().date(), df_v1['Date'].max().date()),
             format='YYYY/MM/DD'
-        )
+
         df_v1_show = df_v1[(df_v1['T0'] >= pd.Timestamp(exp_period[0])) & (df_v1['Date'] <= pd.Timestamp(exp_period[1]))]
         st.dataframe(df_v1_show)
         st.write(df_v1_show.shape)
