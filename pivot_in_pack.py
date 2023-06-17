@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 
-from utils import upload_dataset, progress_bar, remove_spaces
+from utils import upload_dataset, progress_bar, remove_spaces, time_feature_eng
 
 
 # TODO: how to import the info_merge df from sample_info?
@@ -73,8 +73,8 @@ def pivot_in_pack_app():
                  * Delete rows: select one or multiple rows, then press the `delete` key on your keyboard
                  ''')
 
-    if "empty_input" not in st.session_state:
-        st.session_state["empty_input"] = cast_df_columns(empty_df.copy())
+    if "empty_ip_input" not in st.session_state:
+        st.session_state["empty_ip_input"] = cast_df_columns(empty_df.copy())
     if "ip_input" not in st.session_state:
         # st.session_state["ip_input"] = cast_df_columns(empty_df.copy())
         st.session_state["ip_input"] = pd.DataFrame()
@@ -101,10 +101,10 @@ def pivot_in_pack_app():
                                               keep='last', ignore_index=True)
 
             st.write(ip_info)
-            st.session_state.ip_input = ip_info  #
+            st.session_state.ip_input = ip_info  # to database
             st.write(ip_info.shape)
 
-    st.subheader('Experimental CFU Plating Data')
+    st.subheader('In-pack CFU Plating Data')
 
     df = upload_dataset()
     if len(df) > 0:
@@ -113,7 +113,7 @@ def pivot_in_pack_app():
         df_v0, df_v1 = pivot_in_pack(df)  # raw, decay_df
         # st.session_state['pivot_df'] = df_v1.to_dict("records")
         # if len(df_v1) > 0:
-        st.subheader('Raw CFU Plating Data')
+        st.subheader('Raw In-pack CFU Plating Data')
         df_v0 = st.experimental_data_editor(df_v0, num_rows="dynamic")
         st.write(df_v0.shape)
 
@@ -188,24 +188,6 @@ def data_cleaning(df):
     return df
 
 
-def feature_eng(df):
-    """
-    The feature_eng function creates 2 new timedelta features in days and weeks.
-    """
-
-    df[['T0', 'Date']] = df[['T0', 'Date']].apply(pd.to_datetime, format="%m/%d/%y")
-    df['Day'] = (df['Date'] - df['T0']).apply(lambda x: x.days)
-
-    def num_weeks(row):
-        year1, week1, day1 = row['T0'].isocalendar()
-        year2, week2, day2 = row['Date'].isocalendar()
-        return (year2 - year1) * 52 + (week2 - week1)
-
-    df['Week'] = df.apply(num_weeks, axis=1)
-
-    return df
-
-
 def decay_rate(df):
     """
     The decay_rate function calculates the rate at which the material's concentration (in Log10_CFU) decay over time.
@@ -256,7 +238,7 @@ def decay_rate(df):
 def pivot_in_pack(df):
     # clean and organize experimental cfu plating file
     df = data_cleaning(df)
-    raw_cfu = feature_eng(df)
+    raw_cfu = time_feature_eng(df)
 
     # create pivot df to arrange CFU values into wide format
     pivot_rawcfu = df.pivot(index='FD Run ID', columns='Week', values=['CFU/mL', 'CFU/g', 'Water Activity'])

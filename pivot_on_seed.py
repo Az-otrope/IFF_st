@@ -1,9 +1,8 @@
 import streamlit as st
-import streamlit as st
 import pandas as pd
 import numpy as np
 
-from utils import upload_dataset
+from utils import upload_dataset, progress_bar, remove_spaces, time_feature_eng
 
 
 def cast_df_columns(df):
@@ -13,17 +12,12 @@ def cast_df_columns(df):
     categories to each column that were not present in the original dataset, but are present in other datasets.
 
     :param df: Pass in the dataframe to be modified
-    :return: The dataframe with the columns casted as categories
+    :return: The dataframe with the columns cast as categories
     """
     mapping_category_to_col = {
-        "Strain": ['Klebsiella variicola', 'Kosakonia sacchari'],
-        'Fermentation Scale': ['14L', '150K'],
-        'Ingredient 1': ['40% Sucrose', '45.5% Sucrose'],
-        'Ingredient 2': ['8% KH2PO4', '10% Maltodextrin', '22.75% Inulin'],
-        'Ingredient 3': ['10.2% K2HPO4', '0.5% MgSO4'],
-        'Ingredient 4': [],
-        'Container': ['Foil pouch']
+        'Age': ['Yes', 'No']
     }
+
     for col, categories in mapping_category_to_col.items():
         if col in df.columns:
             df[col] = df[col].astype("category").cat.add_categories(categories)
@@ -31,16 +25,65 @@ def cast_df_columns(df):
     return df
 
 
+# An empty df to take in user's inputs
+empty_df = pd.DataFrame(
+    {
+        'FD sample ID': [''],
+        'FD Run ID': [''],
+    }
+)
+
+
+# ================================== DASHBOARD ==============================================
 def pivot_on_seed_app():
     st.title('Pivot On-seed Data Dashboard')
+
+    st.subheader('New On-seed Sample Information Data Entry')
+
+    with st.expander('Instruction for entering new sample information'):
+        st.write('''
+                     Each entry requires both **FD sample ID and FD Run ID** to be valid. 
+
+                     * Add rows: scroll to the bottom-most row and click on the “+” sign in any cell
+                     * Delete rows: select one or multiple rows, then press the `delete` key on your keyboard
+                     ''')
+
+    if "empty_os_input" not in st.session_state:
+        st.session_state["empty_os_input"] = cast_df_columns(empty_df.copy())
+    if "os_input" not in st.session_state:
+        st.session_state["os_input"] = pd.DataFrame()
+
+    with st.form('my_form'):
+        # User enters new entries
+        input_df = st.experimental_data_editor(st.session_state["empty_os_input"], num_rows='dynamic')
+
+        submitted = st.form_submit_button("Submit")
+        if submitted:
+            st.subheader('New In-pack Samples')
+
+            os_info = remove_spaces(input_df)
+
+            # TODO: the first entry with only 1 input FD sample ID or FD Run ID is still captured?
+            os_info = pd.concat([st.session_state.os_input, os_info], ignore_index=True)
+            os_info.dropna(subset=['FD sample ID', 'FD Run ID'], how='any', inplace=True)
+            os_info = os_info.drop_duplicates(subset=['FD sample ID', 'FD Run ID'],
+                                              keep='last', ignore_index=True)
+
+            st.write(os_info)
+            st.session_state.ip_input = os_info  # to database
+            st.write(os_info.shape)
+
+    st.subheader('On-seed CFU Plating Data')
+
     df = upload_dataset()
     # st.write(st.session_state)
     if len(df) > 0:
-        df_v = cast_df_columns(df)
-        df_v0, df_v1 = pivot_on_seed(df_v)
-        st.session_state['pivot_df'] = df_v1.to_dict("records")
+        progress_bar()
+
+        df_v0, df_v1 = pivot_on_seed(df)
+        # st.session_state['pivot_df'] = df_v1.to_dict("records")
         if len(df_v1) > 0:
-            st.subheader('Raw CFU Plating Data')
+            st.subheader('Raw On-seed CFU Plating Data')
             df_v0 = st.experimental_data_editor(df_v0, num_rows="dynamic")
             st.write(df_v0.shape)
 
@@ -61,33 +104,21 @@ def pivot_on_seed_app():
             value=(df_v1['T0'].min().date(), df_v1['Date'].max().date()),
             format='YYYY/MM/DD'
         )
-        df_v1_show = df_v1[(df_v1['T0'] >= pd.Timestamp(exp_period[0])) & (df_v1['Date'] <= pd.Timestamp(exp_period[1]))]
+        df_v1_show = df_v1[
+            (df_v1['T0'] >= pd.Timestamp(exp_period[0])) & (df_v1['Date'] <= pd.Timestamp(exp_period[1]))]
         st.dataframe(df_v1_show)
         st.write(df_v1_show.shape)
-
-
-def feature_eng(df):
-    df[['T0', 'Date']] = df[['T0', 'Date']].apply(pd.to_datetime, format="%m/%d/%y")
-    df['Time point (day)'] = (df['Date'] - df['T0']).apply(lambda x: x.days)
-    
-    def num_weeks(row):
-        year1, week1, day1 = row['T0'].isocalendar()
-        year2, week2, day2 = row['Date'].isocalendar()
-        return (year2 - year1) * 52 + (week2 - week1)
-    df['Time point (week)'] = df.apply(num_weeks, axis=1)
-
-    return df
 
 
 def data_cleaning(df):
     df.columns = df.iloc[1]
     df = df.iloc[2:].reset_index()
     df.dropna(subset=['Batch'], inplace=True)
-    df.drop(df[df['Remark/AW'] == 'Redo'].index, inplace=True)
+    df.drop(df[df['Remark'] == 'Redo'].index, inplace=True)
     df = df[
-        ['Batch','Sample Description','Storage form','Temperature-Celsius','T0','Date', 'CFU/mL', 'SD CFU/mL',
-         'Extender CFU/mL','SD Extender CFU/mL','CV','Water Activity'
-        ]
+        ['Batch', 'Sample Description', 'Code No.', 'T0', 'Date', 'CFU/mL', 'SD CFU/mL',
+         'Extender CFU/mL', 'SD Extender CFU/mL', 'CV', 'Water Activity'
+         ]
     ]
     for idx, row in df.iterrows():
         try:
@@ -99,25 +130,25 @@ def data_cleaning(df):
         df[col] = df[col].replace('#DIV/0!', np.NaN)
         df[col] = df[col].astype(float)
 
-    df = df.rename(columns={'Batch': 'FD Run ID', 'Temperature-Celsius': 'Temperature (C)', 'CV': 'CV (%)'})
+    df = df.rename(columns={'Batch': 'FD Run ID', 'CV': 'CV (%)'})
 
     return df
 
 
 def pivot_on_seed(df):
     df = data_cleaning(df)
-    df = feature_eng(df)
+    df = time_feature_eng(df)
 
-    pivot_rawcfu = df.pivot(index='FD Run ID', columns='Time point (week)', 
-                            values=['CFU/mL','Extender CFU/mL','Water Activity'])
+    pivot_rawcfu = df.pivot(index='FD Run ID', columns='Week',
+                            values=['CFU/mL', 'Extender CFU/mL', 'Water Activity'])
     pivot_rawcfu.columns = [f"W{week}_{scale}" for scale, week in pivot_rawcfu.columns.to_list()]
-    
-    # remove cols that cause duplicated samples
-    cfu = df.drop(['CFU/mL','SD CFU/mL','Extender CFU/mL', 'SD Extender CFU/mL', 'CV (%)',
-                   'Water Activity','Time point (day)', 'Time point (week)'], axis=1)
-    cfu = cfu.drop_duplicates(subset='FD Run ID').reset_index(drop=True)
-    
-    # join the pivot df with the original info
-    cleaned_cfu = pd.merge(cfu, pivot_rawcfu, on='FD Run ID')
 
-    return df, cleaned_cfu
+    # remove cols that cause duplicated samples
+    cfu = df.drop(['CFU/mL', 'SD CFU/mL', 'Extender CFU/mL', 'SD Extender CFU/mL', 'CV (%)',
+                   'Water Activity', 'Day', 'Week'], axis=1)
+    cfu = cfu.drop_duplicates(subset='FD Run ID').reset_index(drop=True)
+
+    # join the pivot df with the original info
+    clean_cfu = pd.merge(cfu, pivot_rawcfu, on='FD Run ID')
+
+    return df, clean_cfu
