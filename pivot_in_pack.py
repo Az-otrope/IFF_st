@@ -11,10 +11,10 @@ import numpy as np
 import statsmodels.api as sm
 
 from utils import upload_dataset, progress_bar, remove_spaces
-# TODO: how to import the info_merge df from sample_info?
-#import sample_info
 
-#info_df = sample_info.info_merge
+
+# TODO: how to import the info_merge df from sample_info?
+# st.write(st.session_state.info_merge)
 
 def cast_df_columns(df):
     """
@@ -23,9 +23,9 @@ def cast_df_columns(df):
     categories to each column that were not present in the original dataset, but are present in other datasets.
 
     :param df: Pass in the dataframe to be modified
-    :return: The dataframe with the columns casted as categories
+    :return: The dataframe with the columns cast as categories
     """
-    
+
     mapping_category_to_col = {
         'Storage form': ['Pellet', 'Unbulked powder', 'Bulked powder, pre-dried bulking', 'Bulked powder, w/o SiO2',
                          'Bulked powder, pre-dried bulking w/o SiO2', 'Bulked powder'],
@@ -34,7 +34,7 @@ def cast_df_columns(df):
         'Desiccant': ['2%CaCl2', '5%SIO2', '10%CaCl2', '10%SIO2', '25%SIO2',
                       '5%TMC', '25%TMC', '10%TMC', '5%TMC+2%CaCl2']
     }
-        
+
     for col, categories in mapping_category_to_col.items():
         if col in df.columns:
             df[col] = df[col].astype("category").cat.add_categories(categories)
@@ -42,11 +42,26 @@ def cast_df_columns(df):
     return df
 
 
+# An empty df to take in user's inputs
+empty_df = pd.DataFrame(
+    {
+        'FD sample ID': [''],
+        'FD Run ID': [''],
+        'Storage form': [''],
+        'Container': [''],
+        'Temperature (C)': [np.nan],
+        'Bulking': [''],
+        'Desiccant': ['']
+    }
+)
+
+
+# ================================== DASHBOARD ==============================================
 def pivot_in_pack_app():
     st.title('Pivot In-pack Data Dashboard')
-    
+
     st.subheader('New In-pack Sample Information Data Entry')
-    
+
     with st.expander('Instruction for entering new sample information'):
         st.write('''
                  Each entry requires both **FD sample ID and FD Run ID** to be valid. 
@@ -55,76 +70,80 @@ def pivot_in_pack_app():
                      * Storage form, Container, Bulking, Desiccant
                      
                  * Add rows: scroll to the bottom-most row and click on the “+” sign in any cell
-                 * Delete rows: select one or more rows and press the `delete` key on your keyboard
+                 * Delete rows: select one or multiple rows, then press the `delete` key on your keyboard
                  ''')
-    
 
-    empty_df = pd.DataFrame(
-        {
-            'FD sample ID': [''],
-            'FD Run ID': [''],
-            'Storage form': [''],
-            'Container': [''],
-            'Temperature (C)': [np.nan],
-            'Bulking': [''],
-            'Desiccant': ['']
-            }
-        )
-    
-    if 'df' not in st.session_state:
-        st.session_state['df'] = cast_df_columns(empty_df.copy())
-        #st.session_state['df'] = cast_df_columns(empty_df)
+    if "empty_input" not in st.session_state:
+        st.session_state["empty_input"] = cast_df_columns(empty_df.copy())
+    if "ip_input" not in st.session_state:
+        # st.session_state["ip_input"] = cast_df_columns(empty_df.copy())
+        st.session_state["ip_input"] = pd.DataFrame()
 
     with st.form('my_form'):
-        input_df = st.experimental_data_editor(st.session_state['df'], num_rows='dynamic')
-        
+        # the session_state.emtpy_input always provides the input_df with an empty frame to take new entries
+        # if I use only session_state.ip_input, the input_df takes in the last session_state.ip_input
+        # BUT NOT the new entries
+        # Thus I need the session_state.empty_input to allow the input_df contains the new entries
+
+        # User enters new entries
+        input_df = st.experimental_data_editor(st.session_state["empty_input"], num_rows='dynamic')
+
         submitted = st.form_submit_button("Submit")
         if submitted:
             st.subheader('New In-pack Samples')
-            
-            df_v = st.session_state['df']
-            df_v0 = remove_spaces(input_df)
 
-            user_input_df = pd.concat([df_v, df_v0], ignore_index=True)
-            user_input_df = user_input_df.drop_duplicates(subset=['FD sample ID', 'FD Run ID', 'Storage form', 'Container'], keep='last', ignore_index=True)
-            user_input_df.dropna(subset=['FD sample ID', 'FD Run ID'], inplace=True)
+            ip_info = remove_spaces(input_df)
 
-            st.write(user_input_df)
-            st.session_state.df = user_input_df
-            st.write(user_input_df.shape)
+            # TODO: the first entry with only 1 input FD sample ID or FD Run ID is still captured?
+            ip_info = pd.concat([st.session_state.ip_input, ip_info], ignore_index=True)
+            ip_info.dropna(subset=['FD sample ID', 'FD Run ID'], how='any', inplace=True)
+            ip_info = ip_info.drop_duplicates(subset=['FD sample ID', 'FD Run ID', 'Storage form', 'Container'],
+                                              keep='last', ignore_index=True)
 
+            st.write(ip_info)
+            st.session_state.ip_input = ip_info  #
+            st.write(ip_info.shape)
 
     st.subheader('Experimental CFU Plating Data')
-    
-    df = upload_dataset()    
+
+    df = upload_dataset()
     if len(df) > 0:
         progress_bar()
-        
-        df_v0, df_v1 = pivot_in_pack(df) # raw, decay_df
-        st.session_state['pivot_df'] = df_v1.to_dict("records")
-        if len(df_v1) > 0:
-            st.subheader('Raw CFU Plating Data')
-            df_v0 = st.experimental_data_editor(df_v0, num_rows="dynamic")
-            st.write(df_v0.shape)
 
-            st.subheader('Processed CFU Plating Data')
+        df_v0, df_v1 = pivot_in_pack(df)  # raw, decay_df
+        # st.session_state['pivot_df'] = df_v1.to_dict("records")
+        # if len(df_v1) > 0:
+        st.subheader('Raw CFU Plating Data')
+        df_v0 = st.experimental_data_editor(df_v0, num_rows="dynamic")
+        st.write(df_v0.shape)
 
-            # TODO: Join with input_df HERE
-            # temp1 = pd.merge(left=real_input_df, right=decay_df.drop(['T0', 'Date'], axis=1),
-            #                  on='FD Run ID', how='left')
-            #
-            # temp2 = pd.merge(left=temp1, right=info_df, on=['FD sample ID'], how='left')
-            #
-            # final_df = pd.merge(temp2, info_df, on='FD sample ID')
+        st.subheader('Processed CFU Plating Data')
 
-            df_v1 = st.experimental_data_editor(df_v1, num_rows="dynamic")
-            st.write(df_v1.shape)
-            st.download_button(
-                label="Download Processed CFU Plating Data as CSV",
-                data=df_v1.to_csv(),
-                file_name='cfu_processed.csv',
-                mime='text/csv'
-            )
+        # TODO: join the 3 dataframes: info_merge, user_input_df and decay_df
+        # temp1 = pd.merge(left=st.session_state.ip_input, right=df_v1.drop(['T0', 'Date'], axis=1),
+        #                  on='FD Run ID', how='left')
+        #
+        # temp2 = pd.merge(left=temp1, right=st.session_state.info_merge, on=['FD sample ID'], how='left')
+        #
+        # final_df = pd.merge(temp2, st.session_state.info_merge, on='FD sample ID')
+
+        df_v1 = st.experimental_data_editor(df_v1, num_rows="dynamic")
+        st.write(df_v1.shape)
+        st.download_button(
+            label="Download Processed CFU Plating Data as CSV",
+            data=df_v1.to_csv(),
+            file_name='cfu_processed.csv',
+            mime='text/csv'
+        )
+
+        # final_df = st.experimental_data_editor(final_df, num_rows="dynamic")
+        # st.write(final_df.shape)
+        # st.download_button(
+        #     label="Download Processed CFU Plating Data as CSV",
+        #     data=final_df.to_csv(),
+        #     file_name='cfu_processed.csv',
+        #     mime='text/csv'
+        # )
 
         exp_period = st.slider(
             'Choose a time range of completed experiments:',
@@ -134,11 +153,13 @@ def pivot_in_pack_app():
             format='YYYY/MM/DD'
         )
 
-
-        df_v1_show = df_v1[(df_v1['T0'] >= pd.Timestamp(exp_period[0])) & (df_v1['Date'] <= pd.Timestamp(exp_period[1]))]
+        df_v1_show = df_v1[
+            (df_v1['T0'] >= pd.Timestamp(exp_period[0])) & (df_v1['Date'] <= pd.Timestamp(exp_period[1]))]
         st.dataframe(df_v1_show)
         st.write(df_v1_show.shape)
 
+
+# =============================== END DASHBOARD ==============================================
 
 def data_cleaning(df):
     df.columns = df.iloc[1]
@@ -179,6 +200,7 @@ def feature_eng(df):
         year1, week1, day1 = row['T0'].isocalendar()
         year2, week2, day2 = row['Date'].isocalendar()
         return (year2 - year1) * 52 + (week2 - week1)
+
     df['Week'] = df.apply(num_weeks, axis=1)
 
     return df
@@ -210,22 +232,22 @@ def decay_rate(df):
         return decay_df
 
     # Extract the input feature and target variable
-    X = df[['Day', "const"]]  # require to be float/int
+    x = df[['Day', "const"]]  # require to be float/int
     y = df['LogCFU']
 
     # Fit the linear regression model
-    model = sm.OLS(y, X)
+    model = sm.OLS(y, x)
     results = model.fit()
 
     # Extract the coefficient and R-squared
-    decay_rate = results.params[1]
+    slope = results.params[1]
     r_squared = results.rsquared
 
     # Extract the 95% confidence interval
     ci = results.conf_int(alpha=0.05)
     ci_slope = ci.loc['Day']
 
-    decay_df = pd.Series({'Decay Rate': decay_rate, 'R-squared': r_squared,
+    decay_df = pd.Series({'Decay Rate': slope, 'R-squared': r_squared,
                           'CI95_lower': ci_slope[0], 'CI95_upper': ci_slope[1]})
 
     return decay_df
@@ -239,12 +261,12 @@ def pivot_in_pack(df):
     # create pivot df to arrange CFU values into wide format
     pivot_rawcfu = df.pivot(index='FD Run ID', columns='Week', values=['CFU/mL', 'CFU/g', 'Water Activity'])
     pivot_rawcfu.columns = [f"W{week}_{scale}" for scale, week in pivot_rawcfu.columns.to_list()]
-    
+
     # remove cols that cause duplicated samples
     cfu = df.drop(['Sample Description', 'Storage form', 'Temperature-Celsius',
                    'CFU/mL', 'CFU/g', 'CV (%)', 'Water Activity', 'Day', 'Week'], axis=1)
     cfu = cfu.drop_duplicates(subset='FD Run ID').reset_index(drop=True)
-    
+
     # join the pivot df with the original info -> wide format df
     clean_cfu = pd.merge(cfu, pivot_rawcfu, on='FD Run ID')
 
@@ -258,5 +280,3 @@ def pivot_in_pack(df):
     decay_df = decay_df.drop_duplicates()
 
     return raw_cfu, decay_df
-
-# TODO: join the 3 dataframes: info_merge, user_input_df and decay_df
