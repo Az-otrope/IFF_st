@@ -28,9 +28,10 @@ authenticator = stauth.Authenticate(
 name, authentication_status, username = authenticator.login('Login', 'main')
 if st.session_state["authentication_status"]:
     authenticator.logout('Logout', 'main')
+
     # DASHBOARD
-    add_sidebar = st.sidebar.selectbox('Option', ('Home','Pivot Sample Information','Pivot In-pack',
-                                                  'Pivot On-seed','Boost Sample Information','Boost'))
+    add_sidebar = st.sidebar.selectbox('Main Menu', ('Home', 'Pivot Sample Information', 'Pivot In-pack',
+                                                     'Pivot On-seed', 'Boost Sample Information', 'Boost'))
     if __name__ == '__main__':
         if add_sidebar == 'Home':
             homepage()
