@@ -86,7 +86,7 @@ def pivot_in_pack_app():
         # Thus I need the session_state.empty_input to allow the input_df contains the new entries
 
         # User enters new entries
-        input_df = st.experimental_data_editor(st.session_state["empty_input"], num_rows='dynamic')
+        input_df = st.experimental_data_editor(st.session_state["empty_ip_input"], num_rows='dynamic')
 
         submitted = st.form_submit_button("Submit")
         if submitted:
