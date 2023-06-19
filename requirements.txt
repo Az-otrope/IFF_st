@@ -1,8 +1,15 @@
-pandas==1.5.3
-numpy==1.24.2
-streamlit==1.21.0
+# local package
+-e .
 altair==4.2.2
-streamlit-aggrid==0.3.4.post3
+numpy==1.24.2
+pandas==1.5.3
+
+# external requirements
+python-dotenv==1.0.0
+rich==13.3.5
 scikit-learn==1.2.2
 statsmodels==0.14.0
+streamlit==1.21.0
+streamlit-aggrid==0.3.4.post3
 streamlit-authenticator
+supabase==1.0.3

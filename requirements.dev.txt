@@ -1,0 +1,9 @@
+-r requirements.txt
+black
+coverage
+pre-commit
+pytest
+pytest-cov
+Sphinx
+sphinx_mdinclude
+tox
