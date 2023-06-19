@@ -11,7 +11,7 @@ Please use the `makefile` to setup your project!
     work_on_IFF_st
     make dev-install  # this will install all required dependencies
     pre-commit install
-    streamlit run src/view/app_alpha.py
+    streamlit run src/view/app_alpha_v0.py
 
 Please use `make lint` to clean your project, it will run `black, isort, and flake8`, *black* is already available in pre-commit hook
 
