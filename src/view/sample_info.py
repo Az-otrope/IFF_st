@@ -226,7 +226,10 @@ def feature_eng(df):
     ]
 
     for col in num_feat:
-        df[col] = df[col].astype(float)
+        try:
+            df[col] = df[col].astype(float)
+        except:
+            pass
 
     # Coefficient
     cryo_coef = {"PVT70%": 0.285, "DSR": 0.342, "SKP": 0.380}
