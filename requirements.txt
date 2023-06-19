@@ -9,6 +9,7 @@ python-dotenv==1.0.0
 rich==13.3.5
 scikit-learn==1.2.2
 statsmodels==0.14.0
+statsmodels
 streamlit==1.21.0
 streamlit-aggrid==0.3.4.post3
 streamlit-authenticator
