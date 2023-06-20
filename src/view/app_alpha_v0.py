@@ -1,21 +1,29 @@
 import warnings
 import yaml
+import sys
+from pathlib import Path
 from yaml.loader import SafeLoader
 
 import streamlit as st
 import streamlit_authenticator as stauth
+
+try:
+    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+except:
+    pass
 
 from src.view.boost import boost_app
 from src.view.pivot_in_pack import pivot_in_pack_app
 from src.view.pivot_on_seed import pivot_on_seed_app
 from src.view.sample_info import sample_info_app
 from src.view.home_page import homepage
+from src.settings import ProjectPaths
 
 warnings.filterwarnings("ignore")
 
 st.set_page_config(layout="wide")
 
-with open("aut.yaml") as file:
+with open(ProjectPaths.EXTERNAL_DATA + "/streamlit_authenticatiom.yaml") as file:
     config = yaml.load(file, Loader=SafeLoader)
 
 authenticator = stauth.Authenticate(

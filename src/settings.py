@@ -32,7 +32,7 @@ class ApiKeys:
 class ProjectPaths:
     ROOT_PATH = str(Path(__file__).parent.parent)
 
-    DATA_PATH = os.path.join(ROOT_PATH, "../data")
+    DATA_PATH = os.path.join(ROOT_PATH, "data")
     EXTERNAL_DATA = os.path.join(DATA_PATH, "external")
     INTERIM_DATA = os.path.join(DATA_PATH, "interim")
     PROCESSED_DATA = os.path.join(DATA_PATH, "processed")

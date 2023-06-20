@@ -15,3 +15,6 @@ class DataManager:
         response = self.client.table(table_name).select(select).execute()
 
         return pd.DataFrame(response.data)
+
+    def insert_data(self, table_name: str = "samples", data: dict = {}) -> None:
+        self.client.table(table_name).insert(data).execute()

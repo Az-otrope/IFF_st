@@ -1,9 +1,9 @@
 import streamlit as st
-
 import pandas as pd
 import numpy as np
-from src.utils.streamlit_utils import upload_dataset, remove_spaces
 
+from src.utils.streamlit_utils import upload_dataset, remove_spaces
+from src.infrastructure.data_management import DataManager
 
 # Time features
 time_feats = ["PA receive date", "FD start date", "EFT date", "Pelletization date"]
@@ -114,9 +114,10 @@ def sample_info_app():
 
     st.info("Developer use for testing - Upload historical data")
     if "df" not in st.session_state:
-        df = upload_dataset()
+        # df = upload_dataset()
+        df = DataManager().fetch_data("samples", "*")
+        st.write(df.head())
         if st.button("Save?"):
-            # breakpoint()
             df_v0 = hist_data_cleaning(df)
             df_v0 = feature_eng(df_v0)
             st.session_state.df = df_v0

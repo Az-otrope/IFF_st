@@ -14,7 +14,7 @@ def cast_df_columns(df):
     :param df: Pass in the dataframe to be modified
     :return: The dataframe with the columns cast as categories
     """
-    mapping_category_to_col = {"Age": ["Yes", "No"]}
+    mapping_category_to_col = {"Age": ["Yes", "No"], "Aged_Temp": ["4", "21"]}
 
     for col, categories in mapping_category_to_col.items():
         if col in df.columns:
@@ -28,6 +28,9 @@ empty_df = pd.DataFrame(
     {
         "FD sample ID": [""],
         "FD Run ID": [""],
+        "Aged": [""],
+        "Aged_Temp": [""],
+        "Aged_Week": [""],
     }
 )
 
@@ -147,14 +150,25 @@ def data_cleaning(df):
 
 def pivot_on_seed(df):
     df = data_cleaning(df)
-    df = time_feature_eng(df)
+    raw_cfu = time_feature_eng(df)
 
     pivot_rawcfu = df.pivot(index="FD Run ID", columns="Week", values=["CFU/mL", "Extender CFU/mL", "Water Activity"])
     pivot_rawcfu.columns = [f"W{week}_{scale}" for scale, week in pivot_rawcfu.columns.to_list()]
 
     # remove cols that cause duplicated samples
     cfu = df.drop(
-        ["CFU/mL", "SD CFU/mL", "Extender CFU/mL", "SD Extender CFU/mL", "CV (%)", "Water Activity", "Day", "Week"],
+        [
+            "Sample Description",
+            "Water Activity",
+            "CFU/mL",
+            "SD CFU/mL",
+            "Extender CFU/mL",
+            "SD Extender CFU/mL",
+            "CV (%)",
+            "Water Activity",
+            "Day",
+            "Week",
+        ],
         axis=1,
     )
     cfu = cfu.drop_duplicates(subset="FD Run ID").reset_index(drop=True)
@@ -162,4 +176,4 @@ def pivot_on_seed(df):
     # join the pivot df with the original info
     clean_cfu = pd.merge(cfu, pivot_rawcfu, on="FD Run ID")
 
-    return df, clean_cfu
+    return raw_cfu, clean_cfu
