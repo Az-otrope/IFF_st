@@ -115,7 +115,7 @@ def sample_info_app():
     st.info("Developer use for testing - Upload historical data")
     if "df" not in st.session_state:
         # df = upload_dataset()
-        df = DataManager().fetch_data("samples", "*")
+        df = DataManager().fetch_data("sparkle", "*")
         st.write(df.head())
         if st.button("Save?"):
             df_v0 = hist_data_cleaning(df)
