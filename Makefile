@@ -4,7 +4,7 @@
 
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 PROJECT_NAME = iff
-PYTHON_INTERPRETER = python3.10
+PYTHON_INTERPRETER = python3.8
 
 ifeq (,$(shell which conda))
 	HAS_CONDA=False
