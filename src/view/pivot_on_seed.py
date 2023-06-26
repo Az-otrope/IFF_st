@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-from src.utils.streamlit_utils import upload_dataset, progress_bar, remove_spaces, time_feature_eng
+from src.utils.streamlit_utils import upload_dataset, progress_bar, remove_spaces, delta_time_cal
 
 
 def cast_df_columns(df):
@@ -150,7 +150,7 @@ def data_cleaning(df):
 
 def pivot_on_seed(df):
     df = data_cleaning(df)
-    raw_cfu = time_feature_eng(df)
+    raw_cfu = delta_time_cal(df)
 
     pivot_rawcfu = df.pivot(index="FD Run ID", columns="Week", values=["CFU/mL", "Extender CFU/mL", "Water Activity"])
     pivot_rawcfu.columns = [f"W{week}_{scale}" for scale, week in pivot_rawcfu.columns.to_list()]

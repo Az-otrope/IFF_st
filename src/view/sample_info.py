@@ -65,7 +65,7 @@ empty_df = pd.DataFrame(
         "Dry in-house": [""],
         "Dried appearance": [""],
         "Container": [""],
-        "Bulk density": [""],
+        "Bulk density (g/mL)": [""],
         "Water activity": [""],
         "Viability (CFU/g)": [""],
     }
@@ -98,7 +98,7 @@ def sample_info_app():
                  * Enter the date in `MM/DD/YY` format.
                  * Enter values in scientific notation (where applicable): 4.05E11 or 4.05E+11
                  * Dropdown features:
-                     * Strain, Fermentation Scale, Cryo mix,
+                     * Strain, Fermentation Scale, Cryo mix, Dry in-house
                      * Ingredient 1, Ingredient 2, Ingredient 3, Container
 
                  * Add rows: scroll to the bottom-most row and click on the “+” sign in any cell
@@ -156,7 +156,8 @@ def sample_info_app():
 def feature_eng(df):
     """
     This function formats datetime and numerical features in the desirable format;
-    then creates a column "Cryo mix Coef" containing a coefficient associates to each cryo-mix type.
+    then creates a column "Cryo mix Coef" containing a coefficient associates to each cryo-mix type, and a column "FC"
+    shortening the descriptions of "Ferm condition"
 
     INPUT: a dataframe with user inputs
     OUTPUT: a dataframe with features engineered for further analysis
@@ -175,7 +176,7 @@ def feature_eng(df):
         "Cryo mix addition rate",
         "FD run time (hr)",
         "Primary ramp rate (C/min)",
-        "Bulk density",
+        "Bulk density (g/mL)",
         "Viability (CFU/g)",
     ]
 
@@ -186,7 +187,7 @@ def feature_eng(df):
             pass
 
     # map the 'Ferm condition'
-    mapping_ferm_cond = {
+    ferm_cond_shortkey = {
         "Tryptone+Peptone": "T+P",
         "Tryptone only": "T only",
         "Glucose": "Glucose",
@@ -207,7 +208,7 @@ def feature_eng(df):
         "Greens": "Greens",
         "Glucose, high EPS": "Glucose",
     }
-    df["FC"] = df["Ferm condition"].map(mapping_ferm_cond)
+    df["FC"] = df["Ferm condition"].map(ferm_cond_shortkey)
 
     # Cryo coefficient
     cryo_coef = {"PVT70%": 0.285, "DSR": 0.342, "SKP": 0.380}
@@ -284,7 +285,7 @@ def sample_info(df):
             "Dry in-house",
             "Dried appearance",
             "Container",
-            "Bulk density",
+            "Bulk density (g/mL)",
             "Water activity",
             "Viability (CFU/g)",
             "Cryo mix Coef",
