@@ -2,46 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-from src.utils.streamlit_utils import upload_dataset, remove_spaces
+from src.utils.streamlit_utils import upload_dataset, remove_spaces, convert_time_features
 from src.infrastructure.data_management import DataManager
-
-# Time features
-time_feats = ["PA receive date", "FD start date", "EFT date", "Pelletization date"]
-
-
-def hist_data_cleaning(df):
-    """
-    The hist_data_cleaning function cleans up the historical dataset to be in the standardized format.
-    This function removes untracked features, formats the date time and NaN values
-
-    INPUT: a dataframe containing historical data
-    OUTPUT: a cleaned-up dataframe of historical data
-    """
-
-    df.columns = [column.strip() for column in df.columns]
-    df = remove_spaces(df)
-
-    try:
-        df.drop(
-            ["Storage tracking", "Seed treatment", "Ingredient4", "Yield (%)", "Log loss", "Note"], axis=1, inplace=True
-        )
-    except:
-        pass
-
-    df.rename(columns={"FD cycle recipe": "FD recipe"}, inplace=True)
-
-    df.dropna(subset=["FD Run ID"], inplace=True)
-    df["FD run time (hr)"] = df["FD run time (hr)"].apply(lambda x: float(x.split()[0]))
-
-    for col in time_feats:
-        df[col] = pd.to_datetime(df[col], infer_datetime_format=True, format="%m/%d/%y", errors="coerce")
-    # If the values were 'Dry in PA', the command above turns str to NaT. Thus, have to revert the input
-    df["PA receive date"] = df["PA receive date"].replace({np.nan: "Dry in PA"})
-
-    df["Viability (CFU/g)"] = df["Viability (CFU/g)"].replace(["#DIV/0!", "n/m"], np.NaN)
-    df["Viability (CFU/g)"] = df["Viability (CFU/g)"].astype(float)
-
-    return df
 
 
 def cast_df_columns(df):
@@ -61,6 +23,7 @@ def cast_df_columns(df):
         "Ingredient 1": ["40% Sucrose", "45.5% Sucrose"],
         "Ingredient 2": ["8% KH2PO4", "10% Maltodextrin", "22.75% Inulin"],
         "Ingredient 3": ["10.2% K2HPO4", "0.5% MgSO4"],
+        "Dry in-house": ["TRUE", "FALSE"],
         "Container": ["Foil pouch", "Mylar bag"],
     }
 
@@ -99,8 +62,10 @@ empty_df = pd.DataFrame(
         "FD run time (hr)": [np.nan],
         "Primary ramp rate (C/min)": [np.nan],
         "PA receive date": [None],  # can take date, string, or None
+        "Dry in-house": [""],
         "Dried appearance": [""],
         "Container": [""],
+        "Bulk density": [""],
         "Water activity": [""],
         "Viability (CFU/g)": [""],
     }
@@ -115,15 +80,17 @@ def sample_info_app():
     st.info("Developer use for testing - Upload historical data")
     if "df" not in st.session_state:
         # df = upload_dataset()
-        df = DataManager().fetch_data("sparkle", "*")
-        st.write(df.head())
-        if st.button("Save?"):
-            df_v0 = hist_data_cleaning(df)
-            df_v0 = feature_eng(df_v0)
-            st.session_state.df = df_v0
-            st.experimental_rerun()
-        else:
-            st.stop()
+        df = DataManager().fetch_data("sample_info", "*")
+        st.session_state.df = df
+        st.write(df)
+        # if st.button("Save?"):
+        #     df_v0 = hist_data_cleaning(df)
+        #     # df_v0 = feature_eng(df_v0)
+        #     df_v0 = sample_info(df_v0)
+        #     st.session_state.df = df_v0
+        #     st.experimental_rerun()
+        # else:
+        #     st.stop()
 
     with st.expander("**IMPORTANT**: Instruction for entering new sample information"):
         st.write(
@@ -151,11 +118,10 @@ def sample_info_app():
 
             # Process the df
             df_v = sample_info(input_df)  # new entries
-            df_v0 = sample_info(st.session_state.df)  # historical data
+            df_v0 = st.session_state.df  # historical data
 
             # Join the new inputs to historical dataset
             df_v1 = pd.concat([df_v0, df_v], ignore_index=True)
-            # df_v1 = df_v0.append(df_v, ignore_index=True)
             df_v1 = df_v1.drop_duplicates(
                 subset=["FD sample ID", "FD Run ID", "Strain", "EFT date"], keep="last", ignore_index=True
             )
@@ -171,6 +137,7 @@ def sample_info_app():
             #         AgGrid(df_v1, gridOptions=gridOptions, enable_enterprise_modules=True)
             # =============================================================================
             st.write(df_v1)
+            # TODO: upload this df to database
             st.session_state.df = df_v1  # goes to database: a full sample_info df
             st.write(df_v1.shape)
 
@@ -182,26 +149,8 @@ def sample_info_app():
             mime="text/csv",
         )
 
-    # TODO: how to export this df to pivot_in_pack.py?
-    # Prepare the a sub df from the full sample_info df for joining with other dfs
-    info_merge = info_to_merge(st.session_state.df)
-    if "info_merge" not in st.session_state:
-        st.session_state["info_merge"] = info_merge
-
 
 # =============================== END DASHBOARD ==============================================
-
-
-def convert_time_features(i):
-    """
-    The convert_time_features function standardizes time inputs, keeps text inputs, and passes None inputs
-    """
-    if i == "":
-        return None
-    try:
-        return pd.to_datetime(i, infer_datetime_format=True, format="%m/%d/%y")
-    except ValueError:
-        return i
 
 
 def feature_eng(df):
@@ -212,8 +161,11 @@ def feature_eng(df):
     INPUT: a dataframe with user inputs
     OUTPUT: a dataframe with features engineered for further analysis
     """
+    # Time features
+    time_feats = ["PA receive date", "FD start date", "EFT date", "Pelletization date"]
 
-    df = remove_spaces(df)
+    for col in time_feats:
+        df[col] = df[col].apply(convert_time_features)
 
     # Numerical features
     num_feat = [
@@ -223,6 +175,7 @@ def feature_eng(df):
         "Cryo mix addition rate",
         "FD run time (hr)",
         "Primary ramp rate (C/min)",
+        "Bulk density",
         "Viability (CFU/g)",
     ]
 
@@ -232,7 +185,31 @@ def feature_eng(df):
         except:
             pass
 
-    # Coefficient
+    # map the 'Ferm condition'
+    mapping_ferm_cond = {
+        "Tryptone+Peptone": "T+P",
+        "Tryptone only": "T only",
+        "Glucose": "Glucose",
+        "Glucose, no EPS, CR": "Glucose",
+        "Peptone only, upconcentrated": "P only, con",
+        "Potato peptone and tryptone, high viscosity by post-ferm addition of 0.7% XG": "T+P, 0.7% XG",
+        "Peptone only": "P only",
+        "Potato peptone and tryptone, low viscosity": "T+P",
+        "Glucose, high EPS, CR": "Glucose",
+        "tryptone only": "T only",
+        "repeat of P080-22-Y007, tryptone + potato peptone": "T+P",
+        "Tryptone + potato peptone, lower top feed rate, no EPS": "T+P",
+        "tryptone + potato peptone, low top feed rate, no EPS, w 0.7% XG": "T+P, 0.7% XG",
+        "repeat of P080-22-Y005, tryptone + potato peptone": "T+P",
+        "Potato peptone only, less EPS, pH control": "P only",
+        "Glucose, no EPS": "Glucose",
+        "Glucose, high EPS, CR broth": "Glucose",
+        "Greens": "Greens",
+        "Glucose, high EPS": "Glucose",
+    }
+    df["FC"] = df["Ferm condition"].map(mapping_ferm_cond)
+
+    # Cryo coefficient
     cryo_coef = {"PVT70%": 0.285, "DSR": 0.342, "SKP": 0.380}
     df["Cryo mix Coef"] = df["Cryo mix"].map(cryo_coef)
 
@@ -271,58 +248,49 @@ def sample_info(df):
     INPUT: a dataframe with user inputs
     OUTPUT: a dataframe with sample's information and broth's yield-loss
     """
-
-    for col in time_feats:
-        df[col] = df[col].apply(convert_time_features)
-
+    df = remove_spaces(df)
     df = feature_eng(df)
 
     to_cal = df[["Broth titer (CFU/mL)", "Viability (CFU/g)", "Cryo mix Coef"]]
     df["Yield (%)"] = to_cal.apply(cal_yield, axis=1)
     df["Log Loss"] = df["Yield (%)"].apply(log_loss)
 
+    # re-arrange the columns order
+    df = df[
+        [
+            "FD sample ID",
+            "FD Run ID",
+            "Strain",
+            "EFT date",
+            "Broth ID",
+            "Fermentation Scale",
+            "Ferm condition",
+            "FC",
+            "EFT (hr)",
+            "Broth titer (CFU/mL)",
+            "Broth age (day)",
+            "Pelletization date",
+            "Cryo mix",
+            "Ingredient 1",
+            "Ingredient 2",
+            "Ingredient 3",
+            "Cryo mix addition rate",
+            "FD start date",
+            "FD recipe",
+            "FD pressure (mTorr)",
+            "FD run time (hr)",
+            "Primary ramp rate (C/min)",
+            "PA receive date",
+            "Dry in-house",
+            "Dried appearance",
+            "Container",
+            "Bulk density",
+            "Water activity",
+            "Viability (CFU/g)",
+            "Cryo mix Coef",
+            "Yield (%)",
+            "Log Loss",
+        ]
+    ]
+
     return df
-
-
-def info_to_merge(df):
-    """
-    The info_to_merge function selects a subset of the sample_info df, shortens the 'Ferm condition' descriptions,
-    and contains only unique 'FD sample ID'. The resulted df is to merge with the dataframes from the pivot_in_pack.
-
-    INPUT: a dataframe contains all up-to-date samples information (st.session_state.df)
-    OUTPUT: a dataframe with unique 'FD sample ID' entries and their associated information
-    """
-    # select necessary cols
-    sub_df = df[["FD sample ID", "Strain", "Ferm condition", "Cryo mix"]]
-
-    # map the 'Ferm condition'
-    mapping_ferm_cond = {
-        "Tryptone+Peptone": "T+P",
-        "Tryptone only": "T only",
-        "Glucose": "Glucose, no EPS",
-        "Glucose, no EPS, CR": "Glucose, no EPS",
-        "Peptone only, upconcentrated": "P only, con",
-        "Potato peptone and tryptone, high viscosity by post-ferm addition of 0.7% XG": "T+P, 0.7% XG",
-        "Peptone only": "P only",
-        "Potato peptone and tryptone, low viscosity": "T+P",
-        "Glucose, high EPS, CR": "Glucose, high EPS",
-        "tryptone only": "T only",
-        "repeat of P080-22-Y007, tryptone + potato peptone": "T+P",
-        "Tryptone + potato peptone, lower top feed rate, no EPS": "T+P",
-        "tryptone + potato peptone, low top feed rate, no EPS, w 0.7% XG": "T+P, 0.7% XG",
-        "repeat of P080-22-Y005, tryptone + potato peptone": "T+P",
-        "Potato peptone only, less EPS, pH control": "P only",
-        "Glucose, no EPS": "Glucose, no EPS",
-        "Glucose, high EPS, CR broth": "Glucose, high EPS",
-        "Greens": "Greens, high EPS",
-        "Glucose, high EPS": "Glucose, no EPS",
-    }
-
-    for i in range(len(sub_df["Ferm condition"])):
-        if sub_df["Ferm condition"][i] in mapping_ferm_cond:
-            sub_df["Ferm condition"][i] = mapping_ferm_cond[sub_df["Ferm condition"][i]]
-
-    # drop duplicates
-    sub_df = sub_df.drop_duplicates()
-
-    return sub_df

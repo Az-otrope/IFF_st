@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 
-from src.utils.streamlit_utils import upload_dataset, progress_bar, remove_spaces, time_feature_eng
+from src.utils.streamlit_utils import upload_dataset, progress_bar, remove_spaces, delta_time_cal
 
 
 # TODO: how to import the info_merge df from sample_info?
@@ -142,6 +142,11 @@ def pivot_in_pack_app():
         # temp1 = pd.merge(left=st.session_state.ip_input, right=df_v1.drop(['T0', 'Date'], axis=1),
         #                  on='FD Run ID', how='left')
         #
+        # select necessary cols from sample_info
+        # sub_df = df[["FD sample ID", "Strain", "Ferm condition", "Cryo mix"]]
+        # drop duplicates
+        # sub_df = sub_df.drop_duplicates(
+        #
         # temp2 = pd.merge(left=temp1, right=st.session_state.info_merge, on=['FD sample ID'], how='left')
         #
         # final_df = pd.merge(temp2, st.session_state.info_merge, on='FD sample ID')
@@ -269,7 +274,7 @@ def decay_rate(df):
 def pivot_in_pack(df):
     # clean and organize experimental cfu plating file
     df = data_cleaning(df)
-    raw_cfu = time_feature_eng(df)
+    raw_cfu = delta_time_cal(df)
 
     # create pivot df to arrange CFU values into wide format
     pivot_rawcfu = df.pivot(index="FD Run ID", columns="Week", values=["CFU/mL", "CFU/g", "Water Activity"])

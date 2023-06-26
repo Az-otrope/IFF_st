@@ -26,21 +26,19 @@ def progress_bar():
     st.write("File uploaded successfully")
 
 
-# =============================================================================
-# def convert_time_features(i):
-#     """
-#     The convert_time_features function standardizes time inputs, keeps text inputs, and passes None inputs
-#     """
-#     if i == '':
-#         return None
-#     try:
-#         return pd.to_datetime(i, infer_datetime_format=True, format="%m/%d/%y")
-#     except ValueError:
-#         return i
-# =============================================================================
+def convert_time_features(i):
+    """
+    The convert_time_features function standardizes time inputs, keeps text inputs, and passes None inputs
+    """
+    if i == "":
+        return None
+    try:
+        return pd.to_datetime(i, infer_datetime_format=True, format="%m/%d/%y")
+    except ValueError:
+        return i
 
 
-def time_feature_eng(df):
+def delta_time_cal(df):
     df[["T0", "Date"]] = df[["T0", "Date"]].apply(pd.to_datetime, format="%m/%d/%y")
     df["Day"] = (df["Date"] - df["T0"]).apply(lambda x: x.days)
 
