@@ -139,6 +139,8 @@ def sample_info_app():
             st.write(df_v1)
             # TODO: upload this df to database
             st.session_state.df = df_v1  # goes to database: a full sample_info df
+            # info_to_db = st.session_state.df.to_json()
+            # DataManager().insert_data("sample_info", info_to_db)
             st.write(df_v1.shape)
 
     if len(st.session_state.df) > 0:
