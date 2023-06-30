@@ -10,7 +10,14 @@ import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 
-from src.utils.streamlit_utils import upload_dataset, progress_bar, remove_spaces, delta_time_cal
+from src.utils.streamlit_utils import (
+    upload_dataset,
+    progress_bar,
+    cfu_data_cleaning,
+    remove_spaces,
+    delta_time_cal,
+    decay_rate,
+)
 
 
 # TODO: how to import the info_merge df from sample_info?
@@ -187,126 +194,83 @@ def pivot_in_pack_app():
 # =============================== END DASHBOARD ==============================================
 
 
-def data_cleaning(df):
-    df.columns = df.iloc[1]
-    df = df.iloc[2:].reset_index()
-    df.dropna(subset=["Batch"], inplace=True)
-    df.drop(df[df["Remark/AW"] == "Redo"].index, inplace=True)
-    df = df[
-        [
-            "Batch",
-            "Sample Description",
-            "Storage form",
-            "Temperature-Celsius",
-            "T0",
-            "Date",
-            "CFU/mL",
-            "CFU/g",
-            "CV",
-            "Water Activity",
-        ]
-    ]
-
-    df = remove_spaces(df)
-
-    for idx, row in df.iterrows():
-        try:
-            df.loc[idx, "CV"] = float(row["CV"].split("%")[0])
-        except Exception as e:
-            pass
-
-    for col in ["CFU/mL", "CFU/g", "CV", "Water Activity"]:
-        df[col] = df[col].replace("#DIV/0!", np.NaN)
-        df[col] = df[col].astype(float)
-
-    df = df.rename(columns={"Batch": "FD Run ID", "CV": "CV (%)"})
-
-    return df
-
-
-def decay_rate(df):
-    """
-    The decay_rate function calculates the rate at which the material's concentration (in Log10_CFU) decay over time.
-    The function takes in time (day) as the independent variable (X) and Log10(CFU) as the dependent variable (y).
-    A linear regression model calculates the slope, r-squared, and the 95% confidence interval (CI) of the slope.
-    The model will skip entries having fewer than 2 datapoints due to avoid overfitting and bias.
-
-    INPUT: a dataframe containing raw plating CFU data (wide format)
-        - X (independent variable): time (day) - int64 or float64
-        - y (dependent variable): Log10(CFU) - float64
-
-    OUTPUT: a dataframe containing the samples information, the CFU values at each timepoint, the decay rate over time,
-        the R-squared of the linear fit equation, the lower and upper values of the 95% CI of the decay rate.
-        - decay_rate: slope of the linear fit equation (m)
-        - r-squared: coefficient of determination
-        - ci_slope: [lower,upper] values of the slope's 95% CI
-    """
-    df["LogCFU"] = np.log10(df["CFU/g"])
-
-    # No calculation if there are only 1 or 2 observant (day-LogCFU)
-    if len(df) < 3:
-        decay_df = pd.Series({"Decay Rate": None, "R-squared": None, "CI95_lower": None, "CI95_upper": None})
-        return decay_df
-
-    # Extract the input feature and target variable
-    x = df[["Day", "const"]]  # require to be float/int
-    y = df["LogCFU"]
-
-    # Fit the linear regression model
-    model = sm.OLS(y, x)
-    results = model.fit()
-
-    # Extract the coefficient and R-squared
-    slope = results.params[1]
-    r_squared = results.rsquared
-
-    # Extract the 95% confidence interval
-    ci = results.conf_int(alpha=0.05)
-    ci_slope = ci.loc["Day"]
-
-    decay_df = pd.Series(
-        {"Decay Rate": slope, "R-squared": r_squared, "CI95_lower": ci_slope[0], "CI95_upper": ci_slope[1]}
-    )
-
-    return decay_df
+# def decay_rate(df):
+#     """
+#     The decay_rate function calculates the rate at which the material's concentration (in Log10_CFU) decay over time.
+#     The function takes in time (day) as the independent variable (X) and Log10(CFU) as the dependent variable (y).
+#     A linear regression model calculates the slope, r-squared, and the 95% confidence interval (CI) of the slope.
+#     The model will skip entries having fewer than 2 datapoints due to avoid overfitting and bias.
+#
+#     INPUT: a dataframe containing raw plating CFU data (wide format)
+#         - X (independent variable): time (day) - int64 or float64
+#         - y (dependent variable): Log10(CFU) - float64
+#
+#     OUTPUT: a dataframe containing the samples information, the CFU values at each timepoint, the decay rate over time,
+#         the R-squared of the linear fit equation, the lower and upper values of the 95% CI of the decay rate.
+#         - decay_rate: slope of the linear fit equation (m)
+#         - r-squared: coefficient of determination
+#         - ci_slope: [lower,upper] values of the slope's 95% CI
+#     """
+#     df["LogCFU"] = np.log10(df["CFU/g"])
+#
+#     # No calculation if there are only 1 or 2 observant (day-LogCFU)
+#     if len(df) < 3:
+#         decay_df = pd.Series({"Decay Rate": None, "R-squared": None, "CI95_lower": None, "CI95_upper": None})
+#         return decay_df
+#
+#     # Extract the input feature and target variable
+#     x = df[["Day", "const"]]  # require to be float/int
+#     y = df["LogCFU"]
+#
+#     # Fit the linear regression model
+#     model = sm.OLS(y, x)
+#     results = model.fit()
+#
+#     # Extract the coefficient and R-squared
+#     slope = results.params[1]
+#     r_squared = results.rsquared
+#
+#     # Extract the 95% confidence interval
+#     ci = results.conf_int(alpha=0.05)
+#     ci_slope = ci.loc["Day"]
+#
+#     decay_df = pd.Series(
+#         {"Decay Rate": slope, "R-squared": r_squared, "CI95_lower": ci_slope[0], "CI95_upper": ci_slope[1]}
+#     )
+#
+#     return decay_df
 
 
 def pivot_in_pack(df):
     # clean and organize experimental cfu plating file
-    df = data_cleaning(df)
-    raw_cfu = delta_time_cal(df)
+    df = cfu_data_cleaning(df)
+
+    # select in-pack df
+    onseed_chars = ["Ext", "treat", "bio", "Rep"]
+    ip_df = df[~df["On-seed Description"].str.contains("|".join(onseed_chars), na=False)]
+    ip_df = ip_df[["FD Run ID", "Date", "T0", "CFU/mL", "CFU/g", "CV (%)", "Water Activity"]]
+
+    raw_ip = delta_time_cal(ip_df)
 
     # create pivot df to arrange CFU values into wide format
-    pivot_rawcfu = df.pivot(index="FD Run ID", columns="Week", values=["CFU/mL", "CFU/g", "Water Activity"])
-    pivot_rawcfu.columns = [f"W{week}_{scale}" for scale, week in pivot_rawcfu.columns.to_list()]
+    pivot_ip = raw_ip.pivot(index="FD Run ID", columns="Week", values=["CFU/mL", "CFU/g", "Water Activity"])
+    pivot_ip.columns = [f"W{week}_{scale}" for scale, week in pivot_ip.columns.to_list()]
 
     # remove cols that cause duplicated samples
-    cfu = df.drop(
-        [
-            "Sample Description",
-            "Storage form",
-            "Temperature-Celsius",
-            "CFU/mL",
-            "CFU/g",
-            "CV (%)",
-            "Water Activity",
-            "Day",
-            "Week",
-        ],
-        axis=1,
-    )
-    cfu = cfu.drop_duplicates(subset="FD Run ID").reset_index(drop=True)
+    ip_cfu = raw_ip.drop(["CFU/mL", "CFU/g", "CV (%)", "Water Activity", "Day", "Week"], axis=1)
+    ip_cfu.drop_duplicates(subset="FD Run ID", inplace=True)
 
     # join the pivot df with the original info -> wide format df
-    clean_cfu = pd.merge(cfu, pivot_rawcfu, on="FD Run ID")
+    wide_ip = pd.merge(ip_cfu, pivot_ip, on="FD Run ID")
 
     # calculate the decay rate, r-squared and 95% CI
-    raw = raw_cfu.copy()
+    raw = raw_ip.copy()
+    raw["LogCFU"] = np.log10(raw["CFU/g"])
     raw = sm.add_constant(raw)
 
     decay = raw.groupby("FD Run ID").apply(decay_rate).reset_index()
-    decay_df = pd.merge(left=clean_cfu, right=decay, on="FD Run ID")
+    decay_ip = pd.merge(left=wide_ip, right=decay, on="FD Run ID")
 
-    decay_df = decay_df.drop_duplicates()
+    decay_ip = decay_ip.drop_duplicates()
 
-    return raw_cfu, decay_df
+    return raw_ip, decay_ip

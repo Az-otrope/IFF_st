@@ -1,8 +1,16 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import statsmodels.api as sm
 
-from src.utils.streamlit_utils import upload_dataset, progress_bar, remove_spaces, delta_time_cal
+from src.utils.streamlit_utils import (
+    upload_dataset,
+    progress_bar,
+    cfu_data_cleaning,
+    remove_spaces,
+    delta_time_cal,
+    decay_rate,
+)
 
 
 def cast_df_columns(df):
@@ -113,67 +121,39 @@ def pivot_on_seed_app():
         st.write(df_v1_show.shape)
 
 
-def data_cleaning(df):
-    df.columns = df.iloc[1]
-    df = df.iloc[2:].reset_index()
-    df.dropna(subset=["Batch"], inplace=True)
-    df.drop(df[df["Remark"] == "Redo"].index, inplace=True)
-    df = df[
-        [
-            "Batch",
-            "Sample Description",
-            "Code No.",
-            "T0",
-            "Date",
-            "CFU/mL",
-            "SD CFU/mL",
-            "Extender CFU/mL",
-            "SD Extender CFU/mL",
-            "CV",
-            "Water Activity",
-        ]
-    ]
-    for idx, row in df.iterrows():
-        try:
-            df.loc[idx, "CV"] = float(row["CV"].split("%")[0])
-        except Exception as e:
-            pass
-
-    for col in ["CFU/mL", "SD CFU/mL", "Extender CFU/mL", "SD Extender CFU/mL", "CV", "Water Activity"]:
-        df[col] = df[col].replace("#DIV/0!", np.NaN)
-        df[col] = df[col].astype(float)
-
-    df = df.rename(columns={"Batch": "FD Run ID", "CV": "CV (%)"})
-
-    return df
+# =============================== END DASHBOARD ==============================================
 
 
 def pivot_on_seed(df):
-    df = data_cleaning(df)
-    raw_cfu = delta_time_cal(df)
+    # clean and organize experimental cfu plating file
+    df = cfu_data_cleaning(df)
 
-    pivot_rawcfu = df.pivot(index="FD Run ID", columns="Week", values=["CFU/mL", "Extender CFU/mL", "Water Activity"])
-    pivot_rawcfu.columns = [f"W{week}_{scale}" for scale, week in pivot_rawcfu.columns.to_list()]
+    # select on-seed df
+    onseed_chars = ["Ext", "treat", "bio", "Rep"]
+    os_df = df[df["On-seed Description"].str.contains("|".join(onseed_chars), na=False)]
+    os_df = os_df[["FD Run ID", "On-seed Description", "Date", "T0", "CFU/mL", "CV (%)"]]
+
+    raw_os = delta_time_cal(os_df)
+
+    # create pivot df to arrange CFU values into wide format
+    pivot_os = raw_os.pivot(index="FD Run ID", columns="Day", values=["CFU/mL"])
+    pivot_os.columns = [f"W{day}_{scale}" for scale, day in pivot_os.columns.to_list()]
 
     # remove cols that cause duplicated samples
-    cfu = df.drop(
-        [
-            "Sample Description",
-            "Water Activity",
-            "CFU/mL",
-            "SD CFU/mL",
-            "Extender CFU/mL",
-            "SD Extender CFU/mL",
-            "CV (%)",
-            "Water Activity",
-            "Day",
-            "Week",
-        ],
-        axis=1,
-    )
-    cfu = cfu.drop_duplicates(subset="FD Run ID").reset_index(drop=True)
+    os_cfu = raw_os.drop(["CFU/mL", "CV (%)", "Day", "Week"], axis=1)
+    os_cfu = os_cfu.drop_duplicates(subset="FD Run ID").reset_index(drop=True)
 
-    # join the pivot df with the original info
-    clean_cfu = pd.merge(cfu, pivot_rawcfu, on="FD Run ID")
+    # join the pivot df with the original info -> wide format df
+    wide_os = pd.merge(os_cfu, pivot_os, on="FD Run ID")
 
-    return raw_cfu, clean_cfu
+    # calculate the decay rate, r-squared and 95% CI
+    raw = raw_os.copy()
+    raw["LogCFU"] = np.log10(raw["CFU/mL"])
+    raw = sm.add_constant(raw)
+
+    decay = raw.groupby("FD Run ID").apply(decay_rate).reset_index()
+    decay_os = pd.merge(left=wide_os, right=decay, on="FD Run ID")
+
+    decay_os = decay_os.drop_duplicates()
+
+    return raw_os, decay_os
